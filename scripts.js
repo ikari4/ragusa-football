@@ -1,6 +1,6 @@
 // scripts.js
 
-// ***function needs to be updated each year
+// ***function needs to be updated each year***
 function findNflWeek() {
     const today = new Date();
 
@@ -48,7 +48,19 @@ window.addEventListener("load", async() => {
 
     // determine nfl_week
     const nflWeek = findNflWeek();
-    console.log("nflWeek: ", nflWeek);
+
+    // does database contain games for nflWeek?
+    const weekRes = await fetch ("/api/is-week-in-db", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ nflWeek })
+    })
+    const isWeek = await weekRes.json();
+    if(isWeek) {
+        console.log("I found games for week ", nflWeek);
+    } else {
+        console.log("No games found for week ", nflWeek);
+    }
 });
 
 // on 'login' button click
