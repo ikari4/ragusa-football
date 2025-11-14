@@ -1,0 +1,24 @@
+{
+  "name": "ragusa-football",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ikari4/ragusa-football.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ikari4/ragusa-football/issues"
+  },
+  "homepage": "https://github.com/ikari4/ragusa-football#readme",
+  "dependencies": {
+    "@libsql/client": "^0.15.15"
+  }
+}

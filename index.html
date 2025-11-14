@@ -1,0 +1,40 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="./football-favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="./football-favicon.png">
+    <link rel="mask-icon" href="./football-favicon.png" color="black">
+    <title>Ragusa Football</title>
+</head>
+<body>
+    <h1>Ragusa Family Pool 2025-26</h1>
+    <!-- User innput table for log on -->
+    <div id="loginModal" style="display:none">
+        <div class="inputRow">
+            <label for="emailInput">email: </label>
+            <input id="emailInput" type="email" placeholder="email" required>
+        </div>
+        <div class="inputRow">
+            <label for="pwInput">password: </label>
+            <input id="pwInput" type="password" placeholder="password" required>
+        </div>
+        <div class="inputRow">
+            <button id="loginBtn">Login</button>
+        </div>
+        <p id="loginError" style="color:red;"></p>
+    </div>
+
+    <div id="messageDiv"></div>
+    <div id="displayDiv"></div>
+    <div id="seasonStandingsDiv"></div>
+    <div id="logoutDiv">
+        <button id="logoutBtn">Logout</button>
+    </div>
+    <script src="scripts.js"></script>
+</body>
+</html>
