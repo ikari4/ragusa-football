@@ -31,7 +31,7 @@ function findNflWeek() {
     if (!currentWeek) {
       return res.status(400).json({ error: "Not within NFL season" });
     }
-    return currentWeek.week;
+    return currentWeek;
 };
 
 // main script begins here
@@ -47,7 +47,8 @@ window.addEventListener("load", async() => {
     loginModal.style.display = "none";
 
     // determine nfl_week
-    const nflWeek = findNflWeek();
+    const currentWeek = findNflWeek();
+    const nflWeek = currentWeek.week;
 
     // does database contain games for nflWeek?
     const weekRes = await fetch ("/api/is-week-in-db", {
@@ -55,12 +56,15 @@ window.addEventListener("load", async() => {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ nflWeek })
     })
+
     const isWeek = await weekRes.json();
-    if(isWeek) {
-        console.log("I found games for week ", nflWeek);
-    } else {
-        console.log("No games found for week ", nflWeek);
-    }
+    if(!isWeek.success) {
+        const allWeekGames = await fetch ("/api/get-and-store-this-week-games", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ currentWeek })
+        })
+    } 
 });
 
 // on 'login' button click

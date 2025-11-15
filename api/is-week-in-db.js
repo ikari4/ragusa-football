@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   
     const client = createClient ({
         url: process.env.TURSO_DATABASE_URL,
-        authToken: process.env.TURSO_AUTH_TOKEN,
+        authToken: process.env.TURSO_AUTH_TOKEN
     });
 
     try {
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
         const match = result.rows[0];
         if (!match) {
-        return res.status(401).json({ error: "NFL Week not found" });
+        return res.status(200).json({ success: false });
         }
 
         return res.status(200).json({ success: true });
