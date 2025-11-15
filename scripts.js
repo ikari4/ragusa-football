@@ -37,6 +37,8 @@ function findNflWeek() {
 // main script begins here
 window.addEventListener("load", async() => {
     const username = localStorage.getItem("username");
+    const playerId = localStorage.getItem("playerId");
+    const teammate = localStorage.getItem("teammate");
     const loginModal = document.getElementById("loginModal");
 
     // show login screen if player not logged in
@@ -46,7 +48,7 @@ window.addEventListener("load", async() => {
     }
     loginModal.style.display = "none";
 
-    // determine nfl_week
+    // determine nflWeek
     const currentWeek = findNflWeek();
     const nflWeek = currentWeek.week;
 
@@ -64,7 +66,20 @@ window.addEventListener("load", async() => {
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ currentWeek })
         })
-    } 
+    }
+    
+    // has player and teammate made all picks in nflWeek?
+    const picksRes = await fetch ("/api/get-games-left-to-pick", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ playerId, currentWeek })
+    })
+    const gamesToPick = await picksRes.json();
+
+    // ***add teammate logic here: if (!gamesToPick) {
+    // ***send teammate and currentWeek to 'get-games-left-to-pick'}
+    // ***the add logic around existence of both returs
+    
 });
 
 // on 'login' button click
