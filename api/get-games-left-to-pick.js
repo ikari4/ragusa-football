@@ -16,7 +16,8 @@ export async function POST(req) {
             g.home_team,
             g.away_team,
             g.game_date,
-            g.spread
+            g.spread,
+            g.nfl_week
             FROM games g
             LEFT JOIN picks p
             ON g.dk_game_id = p.dk_game_id
@@ -34,6 +35,7 @@ export async function POST(req) {
         home_team: row.home_team,
         away_team: row.away_team,
         game_date: row.game_date,
+        nfl_week: row.nfl_week,
         spread: row.spread
         }));
 

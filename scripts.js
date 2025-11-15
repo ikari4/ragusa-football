@@ -34,7 +34,66 @@ function findNflWeek() {
     return currentWeek;
 };
 
+function buildPicksToMakeHtml(gamesToPick) {
+    const week = gamesToPick[0]?.nfl_week;
+    let htmlToPick = `<h3>Week ${week}</h3>`;
+    const gamesByDay = gamesToPick.reduce((groups, game) => {
+        const date = new Date(game.game_date);
+        const dayKey = date.toLocaleDateString("en-US", {
+            weekday: "long",
+            month: "long",
+            day: "numeric"
+        });
+        if (!groups[dayKey]) groups[dayKey] = [];
+        groups[dayKey].push(game);
+        return groups;
+    }, {});
+
+    // group games by day of week
+    for (const [day, dayGames] of Object.entries(gamesByDay)) {
+        htmlToPick += `<h4 class="day-header">${day}</h4>`;
+
+        dayGames.forEach((g, i) => {
+            const gameId = g.dk_game_id;
+            let spreadDisplay = "PK";
+            if (g.spread !== null && g.spread !== undefined) {
+            const spreadNum = Number(g.spread);
+                if (!isNaN(spreadNum)) {
+                    spreadDisplay = spreadNum > 0 ? `+${spreadNum}` : spreadNum.toString();
+                }
+            }
+
+            const nameAttr = `game-${gameId}`;
+
+            htmlToPick += `
+            <div class="game">  
+                <div class="team-row">
+                <label class="team-option">
+                    <input type="radio" name="game-${nameAttr}" value="${g.away_team}" data-game-id="${gameId}">
+                    ${g.away_team} ${spreadDisplay}
+                </label>
+                </div>
+                <div class="at">@</div>
+                <div class="team-row">
+                <label class="team-option">
+                    <input type="radio" name="game-${nameAttr}" value="${g.home_team}" data-game-id="${gameId}">
+                    ${g.home_team}
+                </label>
+                </div>
+            </div>
+            <hr>
+            `;
+        });
+        // loadingEl.style.display = "none";
+    }
+
+    htmlToPick += `<button id="submitBtn">Submit</button>`;
+    return htmlToPick;
+}
+
+// 
 // main script begins here
+// 
 window.addEventListener("load", async() => {
     const username = localStorage.getItem("username");
     const playerId = localStorage.getItem("playerId");
@@ -75,11 +134,23 @@ window.addEventListener("load", async() => {
         body: JSON.stringify({ playerId, currentWeek })
     })
     const gamesToPick = await picksRes.json();
+   
+    // start displaying data on the screen
+    const displayDiv = document.getElementById("displayDiv");
+
+    // if player has picks to make, build & display the html
+    if(gamesToPick.length > 0) {
+        const returnPTMH = buildPicksToMakeHtml(gamesToPick);
+        const PTMHtmlWrap = document.createElement('div');
+        PTMHtmlWrap.innerHTML = returnPTMH;
+        displayDiv.appendChild(PTMHtmlWrap);
+    }
 
     // ***add teammate logic here: if (!gamesToPick) {
     // ***send teammate and currentWeek to 'get-games-left-to-pick'}
     // ***the add logic around existence of both returs
-    
+
+
 });
 
 // on 'login' button click
