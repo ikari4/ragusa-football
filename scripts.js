@@ -209,3 +209,12 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     location.reload();
 });
 
+// on 'logout' button click
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  localStorage.removeItem("username");
+  localStorage.removeItem("playerId");
+  localStorage.removeItem("teammate");
+  location.reload();
+  document.getElementById("loginModal").style.display = "block";
+});
+
