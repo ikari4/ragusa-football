@@ -151,7 +151,7 @@ window.addEventListener("load", async() => {
 
     const isWeek = await weekRes.json();
     if(!isWeek.success) {
-        const allWeekGames = await fetch ("/api/get-and-store-this-week-games", {
+        const getStoreRes = await fetch ("/api/get-and-store-this-week-games", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ currentWeek })
@@ -166,32 +166,40 @@ window.addEventListener("load", async() => {
     })
     const gamesToPick = await picksRes.json();
    
-    // start displaying data on the screen
+    // has teammate made all picks in nflWeek?
+    const teammatePicksRes = await fetch ("/api/get-games-left-to-pick", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ playerId: teammate, currentWeek })
+    })
+    const teammateGamesToPick = await teammatePicksRes.json();
+
+    // get the div ready for screen display
     const displayDiv = document.getElementById("displayDiv");
 
-    // if player has picks to make, build & display the html
-    if(gamesToPick.length > 0) {
+    // show picks table if player & teammate have made picks...
+    if(gamesToPick.length === 0 && teammateGamesToPick.length === 0) {
+        const picksTableRes = await fetch ("/api/build-picks-table-html", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ currentWeek })
+    })
+    const picksTableData = await picksTableRes.json();
+    console.log(picksTableData);
+    // or show picks to make for player if there are some to pick...
+    } else if (gamesToPick.length > 0) {
         const returnPTMH = buildPicksToMakeHtml(gamesToPick);
         const PTMHtmlWrap = document.createElement('div');
         PTMHtmlWrap.innerHTML = returnPTMH;
         displayDiv.appendChild(PTMHtmlWrap);
         setupSubmitButton(playerId);
+    // or alert that teammate hasn't picked yet
     } else {
-        // has teammate made all picks in nflWeek?
-        const teammatePicksRes = await fetch ("/api/get-games-left-to-pick", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ playerId: teammate, currentWeek })
-    })
-        const teammateGamesToPick = await teammatePicksRes.json();
-        if (teammateGamesToPick.length > 0) {
-            alert("Your teammate has yet to submit picks");
-        }
-    }
+        alert("Your teammate has yet to submit picks");
+    } 
 
-    // ***add teammate logic here: if (!gamesToPick) {
-    // ***send teammate and currentWeek to 'get-games-left-to-pick'}
-    // ***the add logic around existence of both returs
+
+    // ***add season standings table
 
 
 });

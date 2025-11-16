@@ -81,7 +81,9 @@ export default async function handler(req, res) {
         }
 
         // Return JSON to frontend
-        res.status(200).send("Odds update completed");
+        return new Response(`Week ${currentWeek.week} games downloaded`, {
+            status: 200
+        });
 
     } catch (error) {
         console.error(error);
