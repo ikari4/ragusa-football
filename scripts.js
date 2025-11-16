@@ -85,10 +85,41 @@ function buildPicksToMakeHtml(gamesToPick) {
             `;
         });
         // loadingEl.style.display = "none";
+
+
     }
 
     htmlToPick += `<button id="submitBtn">Submit</button>`;
     return htmlToPick;
+}
+
+function setupSubmitButton(playerId) {
+    document.getElementById("submitBtn").addEventListener("click", async () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Wait..."
+    const radioButtons = document.querySelectorAll("input[type='radio']:checked");
+    if (radioButtons.length === 0) {
+        alert("Please make at least one pick!");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit";
+        return;
+    }
+    const picks = Array.from(radioButtons).map(rb => ({
+        dk_game_id: rb.dataset.gameId,
+        pick: rb.value,
+        player_id: playerId,
+    }));
+    const response = await fetch("/api/save-picks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ picks }),
+    });
+    const result = await response.json();
+    alert(result.message || "Picks saved!");
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Submit";
+    location.reload();
+    });
 }
 
 // 
@@ -144,6 +175,7 @@ window.addEventListener("load", async() => {
         const PTMHtmlWrap = document.createElement('div');
         PTMHtmlWrap.innerHTML = returnPTMH;
         displayDiv.appendChild(PTMHtmlWrap);
+        setupSubmitButton(playerId);
     }
 
     // ***add teammate logic here: if (!gamesToPick) {
@@ -176,3 +208,4 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     document.getElementById("loginModal").style.display = "none";
     location.reload();
 });
+
