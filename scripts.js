@@ -158,11 +158,11 @@ window.addEventListener("load", async() => {
         })
     }
     
-    // has player and teammate made all picks in nflWeek?
+    // has player made all picks in nflWeek?
     const picksRes = await fetch ("/api/get-games-left-to-pick", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ playerId, currentWeek })
+        body: JSON.stringify({ playerId: playerId, currentWeek })
     })
     const gamesToPick = await picksRes.json();
    
@@ -176,6 +176,17 @@ window.addEventListener("load", async() => {
         PTMHtmlWrap.innerHTML = returnPTMH;
         displayDiv.appendChild(PTMHtmlWrap);
         setupSubmitButton(playerId);
+    } else {
+        // has teammate made all picks in nflWeek?
+        const teammatePicksRes = await fetch ("/api/get-games-left-to-pick", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ playerId: teammate, currentWeek })
+    })
+        const teammateGamesToPick = await teammatePicksRes.json();
+        if (teammateGamesToPick.length > 0) {
+            alert("Your teammate has yet to submit picks");
+        }
     }
 
     // ***add teammate logic here: if (!gamesToPick) {
