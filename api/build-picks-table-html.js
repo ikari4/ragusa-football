@@ -13,17 +13,29 @@ export async function POST(req) {
             authToken: process.env.TURSO_AUTH_TOKEN,
         });
         
-        // find the earlier game start time this nfl_week
+        // get all games for the current week
         const result = await dbClient.execute({
         sql: `
-            SELECT MIN(datetime(game_date)) AS first_start_time
+            SELECT dk_game_id, home_team, away_team, game_date, spread, nfl_week
             FROM games
             WHERE nfl_week = ?;
         `,
         args: [currentWeek.week],
         });
 
-        const firstStart = new Date(result.rows[0].first_start_time);
+        const weekGames = result.rows.map(row => ({
+            dk_game_id: row.dk_game_id,
+            home_team: row.home_team,
+            away_team: row.away_team,
+            game_date: row.game_date,
+            spread: row.spread,
+            nfl_week: row.nfl_week
+        }));
+
+        // find earliest start time this week
+        const firstStart = new Date(
+            Math.min(...weekGames.map(g => new Date(g.game_date).getTime()))
+        );
 
         // if the first game has started, udpate all scores from the api
         const timeNow = new Date();
@@ -33,12 +45,17 @@ export async function POST(req) {
         let requestsRemaining;
 
         if(hasGameStarted) {
-            const scoreResult = await updateScores();
-            scoresData = scoreResult.scoresData;
-            requestsRemaining = scoreResult.requestsRemaining;
+            const scoreResponse = await updateScores(weekGames);
+            const scoreResult = await scoreResponse.json();
+            scoresData = scoreResult.scores_data;
             console.log("scoresData: ", scoresData);
-            console.log("requestsRemaining: ", requestsRemaining);
+            requestsRemaining = scoreResult.requests_remaining;
+            console.log("requests remaining: ", requestsRemaining);
         }
+
+        // next up: modify scoresData from update-scores to add home team, away team
+        // and picks for all players
+        // save winning team only if game is over
 
         return new Response(JSON.stringify(scoresData), {
         status: 200,
