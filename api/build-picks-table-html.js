@@ -2,6 +2,28 @@
 // update scores if first game of week has already started
 // the create html for picks table and return
 
+function tallyWins(scoresData) {
+    const wins = {}; // { username: numberOfWins }
+
+    for (const game of scoresData) {
+        const winningTeam = game.winning_team;
+        if (!winningTeam || winningTeam === null) continue;
+        for (const pickObj of game.picks) {
+            const { username, pick } = pickObj;
+            if (!wins[username]) {
+                wins[username] = 0;
+            }
+            if (pick === winningTeam) {
+                wins[username] += 1;
+            }
+        }
+    }
+
+    return wins;
+}
+
+
+
 import { createClient } from "@libsql/client";
 import { updateScores } from "./update-scores.js";
 
@@ -111,16 +133,18 @@ export async function POST(req) {
             const scoreResult = await scoreResponse.json();
             scoresData = scoreResult.scores_data;
             requestsRemaining = scoreResult.requests_remaining;
-            console.log("requests remaining: ", requestsRemaining);
         }
 
-        // next up: modify scoresData from update-scores to add home team, away team
-        // and picks for all players
-        // save winning team only if game is over
-
-        return new Response(JSON.stringify(scoresData), {
-        status: 200,
-        headers: { "Content-Type": "application/json" }
+        // count player wins
+        const winsData = tallyWins(scoresData);
+        
+        return new Response(JSON.stringify({
+            scoresData: scoresData,
+            winsData: winsData,
+            allPlayers: allPlayers
+        }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
         });
 
     } catch (error) {

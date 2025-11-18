@@ -29,6 +29,7 @@ export default async function handler(req, res) {
         }
         // Extract data from the-odds-api data array
         const data = await response.json();
+        console.log("data: ", data);
         const requestsRemaining = response.headers.get("x-requests-remaining");
         const games = data.map(game => {
             const draftKings = game.bookmakers.find(b => b.key === "draftkings");
@@ -54,7 +55,7 @@ export default async function handler(req, res) {
         authToken: process.env.TURSO_AUTH_TOKEN,
     });
 
-        // Send to Turso Database
+        // send to Turso Database
         for (const g of weekGames) {
         await dbClient.execute({
             sql: `
@@ -80,13 +81,13 @@ export default async function handler(req, res) {
         });
         }
 
-        // Return JSON to frontend
-        return new Response(`Week ${currentWeek.week} games downloaded`, {
-            status: 200
+        // return JSON to frontend
+        return res.status(200).json({
+            message: `Week ${currentWeek.week} games downloaded`
         });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Server Error" });
+        return res.status(500).json({ error: "Server Error" });
     }
 }

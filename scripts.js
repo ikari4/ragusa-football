@@ -2,37 +2,31 @@
 
 // ***function needs to be updated each year***
 function findNflWeek() {
-    const today = new Date();
-
-    // Build UTC dates from US Eastern (handles DST correctly)
-    function getEasternDateUTC(year, month, day, hourEastern) {
-      const local = new Date(Date.UTC(year, month, day, hourEastern));
-      const easternStr = local.toLocaleString("en-US", { timeZone: "America/New_York" });
-      const easternDate = new Date(easternStr);
-      const offsetMillis = easternDate.getTime() - local.getTime();
-      return new Date(local.getTime() - offsetMillis);
-    }
-
-    // Build week ranges
+    const today = new Date(2025, 10, 18, 2, 0, 0);
+    // const today = new Date();
     const nflWeeks = Array.from({ length: 18 }, (_, i) => {
-      const week = i + 1;
+        const week = i + 1;
 
-      // Week 1 begins Tuesday Sept 2 2025 @ 3 PM Eastern (month 8 = September)
-      const start = getEasternDateUTC(2025, 8, 2 + i * 7, 15);
+        // Week 1 start = Tuesday Sept 2, 2025 @ 3:00 PM Eastern
+        const start = new Date(2025, 8, 2 + i * 7, 15, 0, 0);
 
-      // End = 3 PM Eastern of the following Tuesday minus 1 ms
-      const end = new Date(getEasternDateUTC(2025, 8, 2 + (i + 1) * 7, 15) - 1);
+        // Week end = following Tuesday 2:59:59 PM Eastern
+        const end = new Date(2025, 8, 2 + (i + 1) * 7, 14, 59, 59);
 
-      return { week, start, end };
+        return {
+            week,
+            start,
+            end
+        };
     });
 
-    // Find the current week using UTC (server time)
     const currentWeek = nflWeeks.find(w => today >= w.start && today <= w.end);
+
     if (!currentWeek) {
-      return res.status(400).json({ error: "Not within NFL season" });
+        return { error: "Not within NFL season" };
     }
     return currentWeek;
-};
+}
 
 function buildPicksToMakeHtml(gamesToPick) {
     const week = gamesToPick[0]?.nfl_week;
@@ -93,6 +87,87 @@ function buildPicksToMakeHtml(gamesToPick) {
     return htmlToPick;
 }
 
+function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
+    const week = latestScores[0]?.nfl_week;
+    let htmlWP = `<h3>Week ${week}</h3>`;
+    htmlWP += `<div><table>`;
+    htmlWP += "<thead><tr>";
+    allPlayers.forEach(name => {
+        htmlWP += `<th>${name.username}</th>`;
+    });
+    htmlWP += "</tr></thead><tbody><tr>";
+    allPlayers.forEach(name => {
+        htmlWP += `<td>${latestWins[name.username]}</td>`
+    });
+    htmlWP += "</tr></tbody></table></div>";
+    htmlWP += "<br>";
+
+    //  group games by date (YYYY-MM-DD)
+    const gamesByDate = latestScores.reduce((acc, game) => {
+        const dateOnly = game.game_date.split("T")[0]; // "2025-11-16"
+        if (!acc[dateOnly]) acc[dateOnly] = [];
+        acc[dateOnly].push(game);
+        return acc;
+    }, {});
+
+    // build HTML tables for each date group
+    for (const [date, games] of Object.entries(gamesByDate)) {
+    
+    // get all player usernames from the first game's picks array
+    const playerHeaders = games[0].picks.map(p => `<th>${p.username}</th>`).join("");
+
+    let tableHTML = `
+        <table>
+        <thead>
+            <tr>
+                <th colspan="${5 + games[0].picks.length}">${date}</th>
+            </tr>
+            <tr>
+                <th>Away Team</th>
+                <th>Away Score</th>
+                <th>Spread</th>
+                <th>Home Score</th>
+                <th>Home Team</th>
+                ${playerHeaders}
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+    // add rows for each game
+    games.forEach(game => {
+        const homeWinner = game.winning_team === game.home_team;
+        const awayWinner = game.winning_team === game.away_team;
+        const playerCells = game.picks
+            .map(p => {
+                const isWinner = p.pick === game.winning_team;
+                return `<td class="${isWinner ? "winner" : ""}">${p.pick ?? ""}</td>`;
+            })
+            .join("");
+
+        tableHTML += `
+        <tr>
+            <td class="${awayWinner ? "winner" : ""}">${game.away_team}</td>
+            <td>${game.away_score}</td>
+            <td>${game.spread}</td>
+            <td>${game.home_score}</td>
+             <td class="${homeWinner ? "winner" : ""}">${game.home_team}</td>
+            ${playerCells}
+        </tr>
+        `;
+    });
+
+    tableHTML += `
+        </tbody>
+        </table>
+    `;
+
+    // append to htmlWP
+    htmlWP += tableHTML;
+    }
+    return htmlWP;
+}
+
 function setupSubmitButton(playerId) {
     document.getElementById("submitBtn").addEventListener("click", async () => {
     submitBtn.disabled = true;
@@ -151,11 +226,13 @@ window.addEventListener("load", async() => {
 
     const isWeek = await weekRes.json();
     if(!isWeek.success) {
-        const getStoreRes = await fetch ("/api/get-and-store-this-week-games", {
+        const getRes = await fetch ("/api/get-and-store-this-week-games", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({ currentWeek })
         })
+        const getMsg = await getRes.json();
+        alert(getMsg.message);
     }
     
     // has player made all picks in nflWeek?
@@ -185,7 +262,13 @@ window.addEventListener("load", async() => {
             body: JSON.stringify({ currentWeek })
     })
     const picksTableData = await picksTableRes.json();
-    console.log(picksTableData);
+    const latestScores = picksTableData.scoresData;
+    const latestWins = picksTableData.winsData;
+    const allPlayers = picksTableData.allPlayers;
+    const winsPicksTable = buildWinsAndPicksHtml(latestScores, latestWins, allPlayers);
+    const winsPicksHtmlWrap = document.createElement('div');
+    winsPicksHtmlWrap.innerHTML = winsPicksTable;
+    displayDiv.appendChild(winsPicksHtmlWrap);
     
     // or show picks to make for player if there are some to pick...
     } else if (gamesToPick.length > 0) {
