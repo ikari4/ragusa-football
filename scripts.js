@@ -185,6 +185,7 @@ window.addEventListener("load", async() => {
             body: JSON.stringify({ currentWeek })
     })
     const picksTableData = await picksTableRes.json();
+    console.log(picksTableData);
     
     // or show picks to make for player if there are some to pick...
     } else if (gamesToPick.length > 0) {

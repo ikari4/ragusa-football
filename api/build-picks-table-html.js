@@ -13,24 +13,86 @@ export async function POST(req) {
             authToken: process.env.TURSO_AUTH_TOKEN,
         });
         
-        // get all games for the current week
-        const result = await dbClient.execute({
+        // get names of all players
+        const playersResult = await dbClient.execute({
+            sql: `SELECT player_id, username FROM players;`
+        });
+        const allPlayers = playersResult.rows.map(row => ({
+            player_id: row.player_id,
+            username: row.username
+        }));
+                
+        // get all games and player picks for the current week
+        const gamesResult = await dbClient.execute({
         sql: `
-            SELECT dk_game_id, home_team, away_team, game_date, spread, nfl_week
-            FROM games
-            WHERE nfl_week = ?;
+            SELECT 
+                g.dk_game_id,
+                g.home_team,
+                g.away_team,
+                g.game_date,
+                g.spread,
+                g.nfl_week,
+                p.player_id,
+                p.pick,
+                u.username
+        FROM games g
+        LEFT JOIN picks p
+            ON g.dk_game_id = p.dk_game_id
+        LEFT JOIN players u
+            ON p.player_id = u.player_id
+        WHERE g.nfl_week = ?;
         `,
         args: [currentWeek.week],
         });
 
-        const weekGames = result.rows.map(row => ({
-            dk_game_id: row.dk_game_id,
-            home_team: row.home_team,
-            away_team: row.away_team,
-            game_date: row.game_date,
-            spread: row.spread,
-            nfl_week: row.nfl_week
-        }));
+        const gameMap = new Map();
+
+        for (const row of gamesResult.rows) {
+
+            // initialize game entry if needed
+            if (!gameMap.has(row.dk_game_id)) {
+                gameMap.set(row.dk_game_id, {
+                    dk_game_id: row.dk_game_id,
+                    home_team: row.home_team,
+                    away_team: row.away_team,
+                    game_date: row.game_date,
+                    spread: row.spread,
+                    nfl_week: row.nfl_week,
+                    picks: [] 
+                });
+            }
+
+            const game = gameMap.get(row.dk_game_id);
+
+            // add actual pick if it exists
+            if (row.player_id !== null) {
+                game.picks.push({
+                    player_id: row.player_id,
+                    username: row.username,
+                    pick: row.pick
+                });
+            }
+        }
+
+        // fill in missing picks so every game has every player
+        for (const game of gameMap.values()) {
+            const existingPlayerIds = new Set(game.picks.map(p => p.player_id));
+
+            for (const player of allPlayers) {
+                if (!existingPlayerIds.has(player.player_id)) {
+                    game.picks.push({
+                        player_id: player.player_id,
+                        username: player.username,
+                        pick: null        
+                    });
+                }
+            }
+
+            // keep picks sorted by player_id or username
+            game.picks.sort((a, b) => a.player_id - b.player_id);
+        }
+
+        const weekGames = Array.from(gameMap.values());
 
         // find earliest start time this week
         const firstStart = new Date(
@@ -48,7 +110,6 @@ export async function POST(req) {
             const scoreResponse = await updateScores(weekGames);
             const scoreResult = await scoreResponse.json();
             scoresData = scoreResult.scores_data;
-            console.log("scoresData: ", scoresData);
             requestsRemaining = scoreResult.requests_remaining;
             console.log("requests remaining: ", requestsRemaining);
         }

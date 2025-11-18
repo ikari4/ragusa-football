@@ -44,24 +44,27 @@ export async function updateScores(weekGames) {
         // const requestsRemaining = response.headers.get("x-requests-remaining");
  
         // update games table for each matching game
-        const updates = [];
         for (const g of scoresData) {
             const homeScore = Number(g.scores?.find(t => t.name === g.home_team)?.score ?? null);
             const awayScore = Number(g.scores?.find(t => t.name === g.away_team)?.score ?? null);
             const match = weekGames.find(p => p.dk_game_id === g.id);
+            if (!match) continue;
             const spread = match?.spread ?? null;
 
+            if(!isNaN(homeScore)) match.home_score = homeScore;
+            if(!isNaN(awayScore)) match.away_score = awayScore;
+
             let winningTeam = null;
-            if (!isNaN(homeScore) && !isNaN(awayScore)) {
+            if (g.completed === true && !isNaN(homeScore) && !isNaN(awayScore)) {
 
                 const awayScoreAdjusted = awayScore + spread; 
                 winningTeam =
-                awayScoreAdjusted > homeScore
-                ? g.away_team
-                : homeScore > awayScoreAdjusted
-                ? g.home_team
-                : "TIE";
-                g.winning_team = winningTeam;
+                    awayScoreAdjusted > homeScore
+                    ? g.away_team
+                    : homeScore > awayScoreAdjusted
+                    ? g.home_team
+                    : "TIE";
+                    match.winning_team = winningTeam;
 
                 await dbClient.execute({
                     sql: `
@@ -72,16 +75,16 @@ export async function updateScores(weekGames) {
                     args: [homeScore, awayScore, winningTeam, g.id],
                 });
 
-                updates.push({
-                    dk_game_id: g.id,
-                    home_score: homeScore,
-                    away_score: awayScore,
-                    winning_team: winningTeam
-                });
-            }
+                match.home_score = homeScore;
+                match.away_score = awayScore;
+                match.winning_team = winningTeam;
+            }    
+
+
         }
+
         return new Response(JSON.stringify({ 
-            scores_data: updates,
+            scores_data: weekGames,
             requests_remaining: requestsRemaining
         }), {
             status: 200,
