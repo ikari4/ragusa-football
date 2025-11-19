@@ -96,7 +96,7 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
     });
     htmlWP += "</tr></thead><tbody><tr>";
     allPlayers.forEach(name => {
-        htmlWP += `<td>${latestWins[name.username]}</td>`
+        htmlWP += `<td>${latestWins[name.username] ?? 0}</td>`
     });
     htmlWP += "</tr></tbody></table></div>";
     htmlWP += "<br>";
@@ -148,9 +148,9 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
             tableHTML += `
             <tr>
                 <td class="${awayWinner ? "winner" : ""}">${game.away_team}</td>
-                <td>${game.away_score}</td>
+                <td>${game.away_score ?? 0}</td>
                 <td>${game.spread}</td>
-                <td>${game.home_score}</td>
+                <td>${game.home_score ?? 0}</td>
                 <td class="${homeWinner ? "winner" : ""}">${game.home_team}</td>
                 ${playerCells}
             </tr>

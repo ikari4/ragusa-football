@@ -123,7 +123,7 @@ export async function POST(req) {
         const timeNow = new Date();
         const hasGameStarted = timeNow > firstStart;
         
-        let scoresData;
+        let scoresData = weekGames;
         let requestsRemaining;
 
         if(hasGameStarted) {
