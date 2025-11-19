@@ -2,8 +2,7 @@
 
 // ***this function needs to be updated each year***
 function findNflWeek() {
-    const today = new Date(2025, 10, 18, 2, 0, 0);
-    // const today = new Date();
+    const today = new Date();
     const nflWeeks = Array.from({ length: 18 }, (_, i) => {
         const week = i + 1;
 
