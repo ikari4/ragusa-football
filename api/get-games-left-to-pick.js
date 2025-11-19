@@ -1,7 +1,6 @@
 // /api/get-games-left-to-pick.js
 import { createClient } from "@libsql/client";
 
-
 export async function POST(req) {
     try {
         const { playerId, currentWeek } = await req.json();

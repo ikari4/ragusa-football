@@ -3,8 +3,8 @@
 import { createClient } from "@libsql/client";
 
 // *** for development
-import fs from "fs/promises";
-import path from "path";
+// import fs from "fs/promises";
+// import path from "path";
 // *** for development
 
 export async function updateScores(weekGames) {
@@ -14,15 +14,15 @@ export async function updateScores(weekGames) {
     });
 
     // *** for development
-    let scoresData;
-    let requestsRemaining;
-    const useMock = true; 
-    if (useMock) {
-        const filePath = path.resolve("./data/mockScores.json");
-        const data = await fs.readFile(filePath, "utf-8");
-        scoresData = JSON.parse(data);
-        requestsRemaining = 999; 
-    }
+    // let scoresData;
+    // let requestsRemaining;
+    // const useMock = true; 
+    // if (useMock) {
+    //     const filePath = path.resolve("./data/mockScores.json");
+    //     const data = await fs.readFile(filePath, "utf-8");
+    //     scoresData = JSON.parse(data);
+    //     requestsRemaining = 999; 
+    // }
     // *** for development
 
     // get game data from the-odds-api
@@ -34,14 +34,14 @@ export async function updateScores(weekGames) {
         "&daysFrom=" + daysFrom;
 
     try {
-        // const response = await fetch(url);
+        const response = await fetch(url);
 
-        // if (!response.ok) {
-        //     return res.status(response.status).json({ error: "API request failed" });
-        // }
+        if (!response.ok) {
+            return res.status(response.status).json({ error: "API request failed" });
+        }
         // // extract data from the-odds-api data array
-        // const scoresData = await response.json();
-        // const requestsRemaining = response.headers.get("x-requests-remaining");
+        const scoresData = await response.json();
+        const requestsRemaining = response.headers.get("x-requests-remaining");
  
         // update games table for each matching game
         for (const g of scoresData) {
@@ -79,8 +79,6 @@ export async function updateScores(weekGames) {
                 match.away_score = awayScore;
                 match.winning_team = winningTeam;
             }    
-
-
         }
 
         return new Response(JSON.stringify({ 

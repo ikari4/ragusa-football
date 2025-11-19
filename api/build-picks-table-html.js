@@ -22,8 +22,6 @@ function tallyWins(scoresData) {
     return wins;
 }
 
-
-
 import { createClient } from "@libsql/client";
 import { updateScores } from "./update-scores.js";
 

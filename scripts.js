@@ -1,6 +1,6 @@
 // scripts.js
 
-// ***function needs to be updated each year***
+// ***this function needs to be updated each year***
 function findNflWeek() {
     const today = new Date(2025, 10, 18, 2, 0, 0);
     // const today = new Date();
@@ -104,7 +104,8 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
 
     //  group games by date (YYYY-MM-DD)
     const gamesByDate = latestScores.reduce((acc, game) => {
-        const dateOnly = game.game_date.split("T")[0]; // "2025-11-16"
+        const edate = new Date(game.game_date).toDateString();
+        const dateOnly = edate.split("T")[0];
         if (!acc[dateOnly]) acc[dateOnly] = [];
         acc[dateOnly].push(game);
         return acc;
@@ -113,57 +114,57 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
     // build HTML tables for each date group
     for (const [date, games] of Object.entries(gamesByDate)) {
     
-    // get all player usernames from the first game's picks array
-    const playerHeaders = games[0].picks.map(p => `<th>${p.username}</th>`).join("");
+        // get all player usernames from the first game's picks array
+        const playerHeaders = games[0].picks.map(p => `<th>${p.username}</th>`).join("");
 
-    let tableHTML = `
-        <table>
-        <thead>
-            <tr>
-                <th colspan="${5 + games[0].picks.length}">${date}</th>
-            </tr>
-            <tr>
-                <th>Away Team</th>
-                <th>Away Score</th>
-                <th>Spread</th>
-                <th>Home Score</th>
-                <th>Home Team</th>
-                ${playerHeaders}
-            </tr>
-        </thead>
-        <tbody>
-    `;
+        let tableHTML = `
+            <table>
+            <thead>
+                <tr>
+                    <th colspan="${5 + games[0].picks.length}">${date}</th>
+                </tr>
+                <tr>
+                    <th>Away Team</th>
+                    <th>Away Score</th>
+                    <th>Spread</th>
+                    <th>Home Score</th>
+                    <th>Home Team</th>
+                    ${playerHeaders}
+                </tr>
+            </thead>
+            <tbody>
+        `;
 
-    // add rows for each game
-    games.forEach(game => {
-        const homeWinner = game.winning_team === game.home_team;
-        const awayWinner = game.winning_team === game.away_team;
-        const playerCells = game.picks
-            .map(p => {
-                const isWinner = p.pick === game.winning_team;
-                return `<td class="${isWinner ? "winner" : ""}">${p.pick ?? ""}</td>`;
-            })
-            .join("");
+        // add rows for each game
+        games.forEach(game => {
+            const homeWinner = game.winning_team === game.home_team;
+            const awayWinner = game.winning_team === game.away_team;
+            const playerCells = game.picks
+                .map(p => {
+                    const isWinner = p.pick === game.winning_team;
+                    return `<td class="${isWinner ? "winner" : ""}">${p.pick ?? ""}</td>`;
+                })
+                .join("");
+
+            tableHTML += `
+            <tr>
+                <td class="${awayWinner ? "winner" : ""}">${game.away_team}</td>
+                <td>${game.away_score}</td>
+                <td>${game.spread}</td>
+                <td>${game.home_score}</td>
+                <td class="${homeWinner ? "winner" : ""}">${game.home_team}</td>
+                ${playerCells}
+            </tr>
+            `;
+        });
 
         tableHTML += `
-        <tr>
-            <td class="${awayWinner ? "winner" : ""}">${game.away_team}</td>
-            <td>${game.away_score}</td>
-            <td>${game.spread}</td>
-            <td>${game.home_score}</td>
-             <td class="${homeWinner ? "winner" : ""}">${game.home_team}</td>
-            ${playerCells}
-        </tr>
+            </tbody>
+            </table>
         `;
-    });
 
-    tableHTML += `
-        </tbody>
-        </table>
-    `;
-
-    // append to htmlWP
-    htmlWP += tableHTML;
+        // append to htmlWP
+        htmlWP += tableHTML;
     }
     return htmlWP;
 }
@@ -224,6 +225,7 @@ window.addEventListener("load", async() => {
         body: JSON.stringify({ nflWeek })
     })
 
+    // if not, get the games
     const isWeek = await weekRes.json();
     if(!isWeek.success) {
         const getRes = await fetch ("/api/get-and-store-this-week-games", {
