@@ -1,14 +1,212 @@
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 20px;
+    color: black;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.inputRow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#loginModal input {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
 .winner {
     font-weight: bold;
-    background-color: #d1ffd1;
 }
 
 table {
-    margin-bottom: 20px; 
-    border-collapse: collapse
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 16px;
+  table-layout: fixed; 
+  word-wrap: break-word;
 }
 
-table th, td {
-    border: 1px solid #000;
+table th {
+  background-color: rgba(28, 75, 143, 0.7);
+  color: white;
+  padding: 2px;
+  text-align: center;
+  font-size: 14px;
 }
- 
+
+table td {
+  padding: 6px;
+  height: 32px;
+  text-align: center;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+#picks-table th:nth-child(1),
+#picks-table th:nth-child(5),
+#picks-table th:nth-child(6),
+#picks-table th:nth-child(7),
+#picks-table th:nth-child(8),
+#picks-table th:nth-child(9) {
+        width: 48px;
+    }
+
+#picks-table th:nth-child(2),th:nth-child(3), th:nth-child(4) {
+        width: 25px;
+    }
+
+table tr:nth-child(even) {
+  background-color: rgba(28, 75, 143, 0.1);
+}
+
+#picks-table td:nth-child(1),
+#picks-table td:nth-child(2),
+#picks-table td:nth-child(3),
+#picks-table td:nth-child(4),
+#picks-table td:nth-child(5) {
+        background-color: #1C4B8F;
+        opacity: 60%;
+        color: white;
+}    
+
+.week-title {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.table-container {
+    display: flex;
+    justify-content: center; 
+}
+
+#weekStandings {
+    width: 70%;              
+    border-collapse: collapse; 
+    table-layout: fixed;     
+    text-align: center;     
+}
+
+#weekStandings th {
+    font-weight: bold;
+    background-color: rgba(28, 75, 143, 0.7);
+    border: 1px solid #ccc;
+    padding: 8px;
+    width: 25%
+}
+
+#weekStandings td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    font-size: 16px;
+}
+
+#week-banner {
+    text-align: left;
+    font-size: 16px;
+}
+
+#seasonStandings {
+    width: 80%;              
+    border-collapse: collapse; 
+    table-layout: fixed;     
+    text-align: center;     
+}
+
+#seasonStandings th {
+    font-weight: bold;
+    background-color: rgba(28, 75, 143, 0.7);
+    border: 1px solid #ccc;
+    padding: 8px;
+}
+
+#seasonStandings td {
+    font-size: 20px;
+}
+
+#seasonStandings th:nth-child(1),
+#seasonStandings td:nth-child(1) {
+    width: 8%;
+    background-color: rgba(28, 75, 143, 0.7);
+    color: white;
+
+}
+
+#seasonStandings th:nth-child(1),
+#seasonStandings td:nth-child(1) {
+    width: 8%;
+    background-color: rgba(28, 75, 143, 0.7);
+    color: white;
+
+}
+
+#seasonStandings th:nth-child(2),
+#seasonStandings th:nth-child(3),
+#seasonStandings th:nth-child(4),
+#seasonStandings th:nth-child(5) {
+    width: 23%;
+}
+
+#seasonStandings tr:last-child {
+    background-color: rgba(28, 75, 143, 0.7);
+    color: white;
+}
+
+button {
+    width: 80px;
+}
+    
+.game {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.team-row {
+    text-align: left;
+    margin: 0.2rem 0;
+}
+
+.team-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 20px;
+}
+
+.at {
+    text-align: center;
+    font-weight: bold;
+    color: #555;
+    margin: 0.4rem 0;
+}
+
+.game + hr {
+    border: none;
+    border-top: 1px solid #1C4B8F;
+    margin: 0.5rem 0;
+}
+
+.day-header {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    margin-left: 5px;
+    font-size: 14px;
+    opacity: 0.7;
+    color: #1C4B8F;
+}
+
+.picks-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+hr {
+    width: 30%;
+}

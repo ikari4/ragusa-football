@@ -29,7 +29,7 @@ function findNflWeek() {
 
 function buildPicksToMakeHtml(gamesToPick) {
     const week = gamesToPick[0]?.nfl_week;
-    let htmlToPick = `<h3>Week ${week}</h3>`;
+    let htmlToPick = `<div class="picks-div"><h3 id="picks-week">Week ${week}</h3>`;
     const gamesByDay = gamesToPick.reduce((groups, game) => {
         const date = new Date(game.game_date);
         const dayKey = date.toLocaleDateString("en-US", {
@@ -82,14 +82,14 @@ function buildPicksToMakeHtml(gamesToPick) {
 
     }
 
-    htmlToPick += `<button id="submitBtn">Submit</button>`;
+    htmlToPick += `<button id="submitBtn">Submit</button></div>`;
     return htmlToPick;
 }
 
 function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
     const week = latestScores[0]?.nfl_week;
-    let htmlWP = `<h3>Week ${week}</h3>`;
-    htmlWP += `<div><table>`;
+    let htmlWP = `<h3 class="week-title">Week ${week}</h3>`;
+    htmlWP += `<div class="table-container"><table id="weekStandings">`;
     htmlWP += "<thead><tr>";
     allPlayers.forEach(name => {
         htmlWP += `<th>${name.username}</th>`;
@@ -103,8 +103,7 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
 
     //  group games by date (YYYY-MM-DD)
     const gamesByDate = latestScores.reduce((acc, game) => {
-        const edate = new Date(game.game_date).toDateString();
-        const dateOnly = edate.split("T")[0];
+        const dateOnly = new Date(game.game_date).toDateString();
         if (!acc[dateOnly]) acc[dateOnly] = [];
         acc[dateOnly].push(game);
         return acc;
@@ -117,11 +116,9 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
         const playerHeaders = games[0].picks.map(p => `<th>${p.username}</th>`).join("");
 
         let tableHTML = `
-            <table>
+            <table id="picks-table">
             <thead>
-                <tr>
-                    <th colspan="${5 + games[0].picks.length}">${date}</th>
-                </tr>
+                <h3 id="week-banner">${date}</h3>
                 <tr>
                     <th>Away Team</th>
                     <th>Away Score</th>
@@ -195,8 +192,8 @@ function buildSeasonStandingsHtml(standingsData) {
 
     // Build HTML standings table
     let htmlStand = "<hr></hr>";
-    htmlStand += "<h3>Season Standings</h3>";
-    htmlStand += `<div><table>`;
+    htmlStand += `<h3 class="week-title">Season Standings</h3>`;
+    htmlStand += `<div class="table-container"><table id="seasonStandings">`;
     htmlStand += "<thead><tr>";
     htmlStand += "<th>Week</th>";
     playerNames.forEach(name => {
