@@ -168,6 +168,68 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
     return htmlWP;
 }
 
+function buildSeasonStandingsHtml(standingsData) {
+    // Group wins per week per player
+    const playerWinsByWeek = {}; // { week: { playerName: wins } }
+    const allPlayers = new Set();
+
+    standingsData.forEach(row => {
+        const week = row.nfl_week;
+        const player = row.username;
+        const pick = row.pick;
+        const winner = row.winning_team;
+
+        if (!player || !week) return;
+        allPlayers.add(player);
+
+        if (!playerWinsByWeek[week]) playerWinsByWeek[week] = {};
+
+        if (winner && pick === winner) {
+        playerWinsByWeek[week][player] = (playerWinsByWeek[week][player] || 0) + 1;
+        } else if (!playerWinsByWeek[week][player]) {
+        playerWinsByWeek[week][player] = 0;
+        }
+    });
+
+    const playerNames = Array.from(allPlayers);
+
+    // Build HTML standings table
+    let htmlStand = "<hr></hr>";
+    htmlStand += "<h3>Season Standings</h3>";
+    htmlStand += `<div><table>`;
+    htmlStand += "<thead><tr>";
+    htmlStand += "<th>Week</th>";
+    playerNames.forEach(name => {
+        htmlStand += `<th>${name}</th>`;
+    });
+    htmlStand += "</tr></thead><tbody>";
+
+    // Add each week's row
+    const sortedWeeks = Object.keys(playerWinsByWeek).sort((a, b) => a - b);
+    const totalWins = Object.fromEntries(playerNames.map(n => [n, 0]));
+
+    sortedWeeks.forEach(week => {
+        htmlStand += `<tr><td>${week}</td>`;
+        playerNames.forEach(name => {
+        const wins = playerWinsByWeek[week][name] || 0;
+        totalWins[name] += wins;
+        htmlStand += `<td>${wins}</td>`;
+        });
+        htmlStand += "</tr>";
+    });
+
+    // Add totals row
+    htmlStand += "<tr><td>Total</td>";
+    playerNames.forEach(name => {
+        htmlStand += `<td>${totalWins[name]}</td>`;
+    });
+    htmlStand += "</tr>";
+
+    htmlStand += "</tbody></table></div>";
+    htmlStand += "<hr></hr>";
+    return htmlStand;
+}
+
 function setupSubmitButton(playerId) {
     document.getElementById("submitBtn").addEventListener("click", async () => {
     submitBtn.disabled = true;
@@ -283,9 +345,21 @@ window.addEventListener("load", async() => {
         alert("Your teammate has yet to submit picks");
     } 
 
+    // show add season standings table
+    try {
+        const standingsRes = await fetch("/api/build-season-standings-html");
+        const standingsData = await standingsRes.json();
 
-    // ***add season standings table
-
+        if (!Array.isArray(standingsData)) {
+            throw new Error("Invalid standings data");
+        }
+        const seasonStandingsTable = buildSeasonStandingsHtml(standingsData);
+        const seasonStandingsHtmlWrap = document.createElement('div');
+        seasonStandingsHtmlWrap.innerHTML = seasonStandingsTable;
+        displayDiv.appendChild(seasonStandingsHtmlWrap);
+        } catch (err) {
+            alert("Error loading standings: " + err.message);
+        } 
 
 });
 
