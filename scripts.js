@@ -141,12 +141,20 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
                     return `<td class="${isWinner ? "winner" : ""}">${p.pick ?? ""}</td>`;
                 })
                 .join("");
-
+            
+            let spreadDisplay = "PK";
+            if (game.spread !== null && game.spread !== undefined) {
+                const spreadNum = Number(game.spread);
+                if (!isNaN(spreadNum)) {
+                    spreadDisplay = spreadNum > 0 ? `+${spreadNum}` : spreadNum.toString();
+                }
+            }
+            
             tableHTML += `
             <tr>
                 <td class="${awayWinner ? "winner" : ""}">${game.away_team}</td>
                 <td>${game.away_score ?? 0}</td>
-                <td>${game.spread}</td>
+                <td>${spreadDisplay}</td>
                 <td>${game.home_score ?? 0}</td>
                 <td class="${homeWinner ? "winner" : ""}">${game.home_team}</td>
                 ${playerCells}
@@ -264,6 +272,7 @@ window.addEventListener("load", async() => {
     const playerId = localStorage.getItem("playerId");
     const teammate = localStorage.getItem("teammate");
     const loginModal = document.getElementById("loginModal");
+    const spinner = document.getElementById("loadingMessage");
 
     // show login screen if player not logged in
     if(!username) {
@@ -277,12 +286,13 @@ window.addEventListener("load", async() => {
     const nflWeek = currentWeek.week;
 
     // does database contain games for nflWeek?
+    spinner.style.display = "block";
     const weekRes = await fetch ("/api/is-week-in-db", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ nflWeek })
     })
-
+    
     // if not, get the games
     const isWeek = await weekRes.json();
     if(!isWeek.success) {
@@ -293,9 +303,11 @@ window.addEventListener("load", async() => {
         })
         const getMsg = await getRes.json();
         alert(getMsg.message);
+        spinner.style.display = "none";
     }
     
     // has player made all picks in nflWeek?
+    spinner.style.display = "block";
     const picksRes = await fetch ("/api/get-games-left-to-pick", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
@@ -325,6 +337,8 @@ window.addEventListener("load", async() => {
     const latestScores = picksTableData.scoresData;
     const latestWins = picksTableData.winsData;
     const allPlayers = picksTableData.allPlayers;
+    const requestsRemaining = picksTableData.requestsRemaining;
+    console.log("requestsRemaining: ", requestsRemaining);
     const winsPicksTable = buildWinsAndPicksHtml(latestScores, latestWins, allPlayers);
     const winsPicksHtmlWrap = document.createElement('div');
     winsPicksHtmlWrap.innerHTML = winsPicksTable;
@@ -354,6 +368,7 @@ window.addEventListener("load", async() => {
         const seasonStandingsHtmlWrap = document.createElement('div');
         seasonStandingsHtmlWrap.innerHTML = seasonStandingsTable;
         displayDiv.appendChild(seasonStandingsHtmlWrap);
+        spinner.style.display = "none";
         } catch (err) {
             alert("Error loading standings: " + err.message);
         } 

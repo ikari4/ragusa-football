@@ -137,6 +137,7 @@ export async function POST(req) {
         const winsData = tallyWins(scoresData);
         
         return new Response(JSON.stringify({
+            requestsRemaining: requestsRemaining,
             scoresData: scoresData,
             winsData: winsData,
             allPlayers: allPlayers
