@@ -200,7 +200,7 @@ function buildSeasonStandingsHtml(standingsData) {
     htmlStand += `<h3 class="week-title">Season Standings</h3>`;
     htmlStand += `<div class="table-container"><table id="seasonStandings">`;
     htmlStand += "<thead><tr>";
-    htmlStand += "<th>Week</th>";
+    htmlStand += "<th></th>";
     playerNames.forEach(name => {
         htmlStand += `<th>${name}</th>`;
     });
@@ -221,7 +221,7 @@ function buildSeasonStandingsHtml(standingsData) {
     });
 
     // Add totals row
-    htmlStand += "<tr><td>Total</td>";
+    htmlStand += "<tr><td></td>";
     playerNames.forEach(name => {
         htmlStand += `<td>${totalWins[name]}</td>`;
     });
