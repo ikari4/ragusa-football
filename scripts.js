@@ -29,7 +29,7 @@ function findNflWeek() {
 
 function buildPicksToMakeHtml(gamesToPick) {
     const week = gamesToPick[0]?.nfl_week;
-    let htmlToPick = `<div class="picks-div"><h3 id="picks-week">Week ${week}</h3>`;
+    let htmlToPick = `<div class="picks-div"><h3 class="week-title">Week ${week}</h3>`;
     const gamesByDay = gamesToPick.reduce((groups, game) => {
         const date = new Date(game.game_date);
         const dayKey = date.toLocaleDateString("en-US", {
@@ -61,25 +61,22 @@ function buildPicksToMakeHtml(gamesToPick) {
             htmlToPick += `
             <div class="game">  
                 <div class="team-row">
-                <label class="team-option">
-                    <input type="radio" name="game-${nameAttr}" value="${g.away_team}" data-game-id="${gameId}">
-                    ${g.away_team} ${spreadDisplay}
-                </label>
+                    <label class="team-option">
+                        <input type="radio" name="game-${nameAttr}" value="${g.away_team}" data-game-id="${gameId}">
+                        ${g.away_team} ${spreadDisplay}
+                    </label>
                 </div>
                 <div class="at">@</div>
                 <div class="team-row">
-                <label class="team-option">
-                    <input type="radio" name="game-${nameAttr}" value="${g.home_team}" data-game-id="${gameId}">
-                    ${g.home_team}
-                </label>
+                    <label class="team-option">
+                        <input type="radio" name="game-${nameAttr}" value="${g.home_team}" data-game-id="${gameId}">
+                        ${g.home_team}
+                    </label>
                 </div>
             </div>
             <hr>
             `;
         });
-        // loadingEl.style.display = "none";
-
-
     }
 
     htmlToPick += `<button id="submitBtn">Submit</button></div>`;
@@ -121,9 +118,9 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
                 <h3 id="week-banner">${date}</h3>
                 <tr>
                     <th>Away Team</th>
-                    <th>Away Score</th>
-                    <th>Spread</th>
-                    <th>Home Score</th>
+                    <th>Score</th>
+                    <th>Line</th>
+                    <th>Score</th>
                     <th>Home Team</th>
                     ${playerHeaders}
                 </tr>
@@ -273,10 +270,12 @@ window.addEventListener("load", async() => {
     const teammate = localStorage.getItem("teammate");
     const loginModal = document.getElementById("loginModal");
     const spinner = document.getElementById("loadingMessage");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     // show login screen if player not logged in
     if(!username) {
         loginModal.style.display = "block";
+        logoutBtn.style.display = "none";
         return;
     }
     loginModal.style.display = "none";
@@ -303,6 +302,7 @@ window.addEventListener("load", async() => {
         })
         const getMsg = await getRes.json();
         alert(getMsg.message);
+        console.log("requestsRemaining from games: ", getMsg.requestsRemaining);
         spinner.style.display = "none";
     }
     
@@ -338,11 +338,12 @@ window.addEventListener("load", async() => {
     const latestWins = picksTableData.winsData;
     const allPlayers = picksTableData.allPlayers;
     const requestsRemaining = picksTableData.requestsRemaining;
-    console.log("requestsRemaining: ", requestsRemaining);
+    console.log("requestsRemaining from scores: ", requestsRemaining);
     const winsPicksTable = buildWinsAndPicksHtml(latestScores, latestWins, allPlayers);
     const winsPicksHtmlWrap = document.createElement('div');
     winsPicksHtmlWrap.innerHTML = winsPicksTable;
     displayDiv.appendChild(winsPicksHtmlWrap);
+    spinner.style.display = "none";
     
     // or show picks to make for player if there are some to pick...
     } else if (gamesToPick.length > 0) {
@@ -350,6 +351,7 @@ window.addEventListener("load", async() => {
         const PTMHtmlWrap = document.createElement('div');
         PTMHtmlWrap.innerHTML = returnPTMH;
         displayDiv.appendChild(PTMHtmlWrap);
+        spinner.style.display = "none";
         setupSubmitButton(playerId);
     // or alert that teammate hasn't picked yet
     } else {

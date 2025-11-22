@@ -29,7 +29,6 @@ export default async function handler(req, res) {
         }
         // Extract data from the-odds-api data array
         const data = await response.json();
-        console.log("data: ", data);
         const requestsRemaining = response.headers.get("x-requests-remaining");
         const games = data.map(game => {
             const draftKings = game.bookmakers.find(b => b.key === "draftkings");
@@ -83,7 +82,8 @@ export default async function handler(req, res) {
 
         // return JSON to frontend
         return res.status(200).json({
-            message: `Week ${currentWeek.week} games downloaded`
+            message: `Week ${currentWeek.week} games downloaded`,
+            requestsRemaining: requestsRemaining
         });
 
     } catch (error) {

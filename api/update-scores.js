@@ -2,28 +2,11 @@
 
 import { createClient } from "@libsql/client";
 
-// *** for development
-// import fs from "fs/promises";
-// import path from "path";
-// *** for development
-
 export async function updateScores(weekGames) {
     const dbClient = createClient({
         url: process.env.TURSO_DATABASE_URL,
         authToken: process.env.TURSO_AUTH_TOKEN,
     });
-
-    // *** for development
-    // let scoresData;
-    // let requestsRemaining;
-    // const useMock = true; 
-    // if (useMock) {
-    //     const filePath = path.resolve("./data/mockScores.json");
-    //     const data = await fs.readFile(filePath, "utf-8");
-    //     scoresData = JSON.parse(data);
-    //     requestsRemaining = 999; 
-    // }
-    // *** for development
 
     // get game data from the-odds-api
     const urlBase = 'https://api.the-odds-api.com/v4/sports/americanfootball_nfl/scores/';
