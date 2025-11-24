@@ -16,6 +16,7 @@ export default async function handler (req, res) {
             g.nfl_week,
             g.winning_team,
             pl.username,
+            pl.team_name,
             p.pick
             FROM games g
             LEFT JOIN picks p ON g.dk_game_id = p.dk_game_id

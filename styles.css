@@ -86,7 +86,8 @@ button {
 .table-container,
 #weekStandings,
 #picks-table,
-#seasonStandings {
+#seasonStandings,
+#teamStandings {
     margin-left: auto;
     margin-right: auto
 }
@@ -183,6 +184,12 @@ table tr:nth-child(even) {
     #picks-table th, #picks-table td {
         font-size: 12px;
     }
+    .week-title {
+        font-size: 14px;
+    }
+    #week-banner {
+        font-size: 14px;
+    }
 }
 
 @media screen and (orientation: portrait) {
@@ -256,6 +263,36 @@ table tr:nth-child(even) {
     }
     #seasonStandings td {
         font-size: 12px;
+    }
+}
+
+/* team season standings table (inside displayDiv) */
+#teamStandings {
+    width: 70%;              
+    border-collapse: collapse; 
+    table-layout: fixed;
+}
+
+@media screen and (orientation: landscape) {
+    #teamStandings th {
+        font-size: 12px;
+    }
+    #teamStandings td {
+        font-size: 16px;
+    }
+}
+
+@media screen and (orientation: portrait) {
+    #teamStandings {
+        width: 100%;
+    }
+    #teamStandings th {
+        font-size: 10px;
+        height: 14px;
+    }
+    #teamStandings td {
+        font-size: 14px;
+        height: 14px;
     }
 }
 

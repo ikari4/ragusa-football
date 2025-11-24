@@ -171,7 +171,7 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
 }
 
 function buildSeasonStandingsHtml(standingsData) {
-    // Group wins per week per player
+    // group wins per week per player
     const playerWinsByWeek = {}; // { week: { playerName: wins } }
     const allPlayers = new Set();
 
@@ -195,7 +195,7 @@ function buildSeasonStandingsHtml(standingsData) {
 
     const playerNames = Array.from(allPlayers);
 
-    // Build HTML standings table
+    // build HTML standings table
     let htmlStand = "<hr></hr>";
     htmlStand += `<h3 class="week-title">Season Standings</h3>`;
     htmlStand += `<div class="table-container"><table id="seasonStandings">`;
@@ -206,7 +206,7 @@ function buildSeasonStandingsHtml(standingsData) {
     });
     htmlStand += "</tr></thead><tbody>";
 
-    // Add each week's row
+    // add each week's row
     const sortedWeeks = Object.keys(playerWinsByWeek).sort((a, b) => a - b);
     const totalWins = Object.fromEntries(playerNames.map(n => [n, 0]));
 
@@ -220,7 +220,7 @@ function buildSeasonStandingsHtml(standingsData) {
         htmlStand += "</tr>";
     });
 
-    // Add totals row
+    // add totals row
     htmlStand += "<tr><td></td>";
     playerNames.forEach(name => {
         htmlStand += `<td>${totalWins[name]}</td>`;
@@ -229,6 +229,49 @@ function buildSeasonStandingsHtml(standingsData) {
 
     htmlStand += "</tbody></table></div>";
     htmlStand += "<hr></hr>";
+
+    // create team standings array
+    const teamWins = {};      // { team_name: totalWins }
+    const allTeams = new Set();
+
+    standingsData.forEach(row => {
+        const team = row.team_name;
+        const pick = row.pick;
+        const winner = row.winning_team;
+
+        if (!team) return;
+        allTeams.add(team);
+
+        if (!teamWins[team]) teamWins[team] = 0;
+
+        if (winner && pick === winner) {
+            teamWins[team] += 1;
+        }
+    });
+
+    const teamNames = Array.from(allTeams);
+
+    // build team standings table
+    let htmlTeams = "<h3 class='week-title'>Team Standings</h3>";
+    htmlTeams += `<div class="table-container"><table id="teamStandings">`;
+    htmlTeams += "<thead><tr>";
+
+    teamNames.forEach(team => {
+        htmlTeams += `<th>${team}</th>`;
+    });
+
+    htmlTeams += "</tr></thead><tbody><tr>";
+
+    teamNames.forEach(team => {
+        htmlTeams += `<td>${teamWins[team] || 0}</td>`;
+    });
+
+    htmlTeams += "</tr></tbody></table></div>";
+    htmlTeams += "<hr>";
+
+    // append new table
+    htmlStand += htmlTeams;
+
     return htmlStand;
 }
 
@@ -328,10 +371,14 @@ window.addEventListener("load", async() => {
 
     // show picks table if player & teammate have made picks...
     if(gamesToPick.length === 0 && teammateGamesToPick.length === 0) {
+        wantToUpdateScores = confirm("Click OK to update all games scores or Cancel to skip");
         const picksTableRes = await fetch ("/api/build-picks-table-html", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ currentWeek })
+            body: JSON.stringify({ 
+                currentWeek,
+                wantToUpdateScores
+            })
     })
     const picksTableData = await picksTableRes.json();
     const latestScores = picksTableData.scoresData;

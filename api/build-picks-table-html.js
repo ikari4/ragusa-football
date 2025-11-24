@@ -27,7 +27,7 @@ import { updateScores } from "./update-scores.js";
 
 export async function POST(req) {
     try {
-        const { currentWeek } = await req.json();
+        const { currentWeek, wantToUpdateScores } = await req.json();
         const dbClient = createClient({
             url: process.env.TURSO_DATABASE_URL,
             authToken: process.env.TURSO_AUTH_TOKEN,
@@ -50,8 +50,11 @@ export async function POST(req) {
                 g.home_team,
                 g.away_team,
                 g.game_date,
+                g.home_score,
+                g.away_score,
                 g.spread,
                 g.nfl_week,
+                g.winning_team,
                 p.player_id,
                 p.pick,
                 u.username
@@ -75,8 +78,11 @@ export async function POST(req) {
                     dk_game_id: row.dk_game_id,
                     home_team: row.home_team,
                     away_team: row.away_team,
+                    home_score: row.home_score,
+                    away_score: row.away_score,
                     game_date: row.game_date,
                     spread: row.spread,
+                    winning_team: row.winning_team,
                     nfl_week: row.nfl_week,
                     picks: [] 
                 });
@@ -124,11 +130,10 @@ export async function POST(req) {
 
 
         const hasGameStarted = timeNow > firstStart;
-        
         let scoresData = weekGames;
         let requestsRemaining;
 
-        if(hasGameStarted) {
+        if(hasGameStarted && wantToUpdateScores) {
             const scoreResponse = await updateScores(weekGames);
             const scoreResult = await scoreResponse.json();
             scoresData = scoreResult.scores_data;
