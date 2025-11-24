@@ -273,6 +273,20 @@ table tr:nth-child(even) {
     table-layout: fixed;
 }
 
+#teamStandings th {
+    font-weight: bold;
+    background-color: rgba(28, 75, 143, 0.7);
+    border: 1px solid #ccc;
+    padding: 8px;
+    width: 50%
+}
+
+#teamStandings td {
+    border: 1px solid #ccc;
+    padding: 8px;
+    font-size: 16px;
+}
+
 @media screen and (orientation: landscape) {
     #teamStandings th {
         font-size: 14px;
