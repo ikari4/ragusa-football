@@ -275,7 +275,7 @@ table tr:nth-child(even) {
 
 @media screen and (orientation: landscape) {
     #teamStandings th {
-        font-size: 12px;
+        font-size: 14px;
     }
     #teamStandings td {
         font-size: 16px;
