@@ -6,11 +6,11 @@ function findNflWeek() {
     const nflWeeks = Array.from({ length: 18 }, (_, i) => {
         const week = i + 1;
 
-        // Week 1 start = Tuesday Sept 2, 2025 @ 3:00 PM Eastern
-        const start = new Date(2025, 8, 2 + i * 7, 15, 0, 0);
+        // Week 1 start = Tuesday Sept 2, 2025 @ 12:00 PM Eastern
+        const start = new Date(2025, 8, 2 + i * 7, 12, 0, 0);
 
-        // Week end = following Tuesday 2:59:59 PM Eastern
-        const end = new Date(2025, 8, 2 + (i + 1) * 7, 14, 59, 59);
+        // Week end = following Tuesday 11:59:59 AM Eastern
+        const end = new Date(2025, 8, 2 + (i + 1) * 7, 11, 59, 59);
 
         return {
             week,
@@ -65,7 +65,7 @@ function buildPicksToMakeHtml(gamesToPick) {
                 <div class="team-row">
                     <label class="team-option">
                         <input type="radio" name="game-${nameAttr}" value="${g.away_team}" data-game-id="${gameId}">
-                        <img class="team-logo" src="/images/${awayImg}.png" class="team-logo">
+                        <img class="team-logo-pick" src="/images/${awayImg}.png" class="team-logo">
                         ${g.away_team} ${spreadDisplay}
                     </label>
                 </div>
@@ -73,7 +73,7 @@ function buildPicksToMakeHtml(gamesToPick) {
                 <div class="team-row">
                     <label class="team-option">
                         <input type="radio" name="game-${nameAttr}" value="${g.home_team}" data-game-id="${gameId}">
-                        <img class="team-logo" src="/images/${homeImg}.png" class="team-logo">
+                        <img class="team-logo-pick" src="/images/${homeImg}.png" class="team-logo">
                         ${g.home_team}
                     </label>
                 </div>
