@@ -57,12 +57,15 @@ function buildPicksToMakeHtml(gamesToPick) {
             }
 
             const nameAttr = `game-${gameId}`;
+            const awayImg = g.away_team.toLowerCase().replace(/\s+/g, "-");
+            const homeImg = g.home_team.toLowerCase().replace(/\s+/g, "-");
 
             htmlToPick += `
             <div class="game">  
                 <div class="team-row">
                     <label class="team-option">
                         <input type="radio" name="game-${nameAttr}" value="${g.away_team}" data-game-id="${gameId}">
+                        <img class="team-logo" src="/images/${awayImg}.png" class="team-logo">
                         ${g.away_team} ${spreadDisplay}
                     </label>
                 </div>
@@ -70,6 +73,7 @@ function buildPicksToMakeHtml(gamesToPick) {
                 <div class="team-row">
                     <label class="team-option">
                         <input type="radio" name="game-${nameAttr}" value="${g.home_team}" data-game-id="${gameId}">
+                        <img class="team-logo" src="/images/${homeImg}.png" class="team-logo">
                         ${g.home_team}
                     </label>
                 </div>
@@ -117,11 +121,11 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
             <thead>
                 <h3 id="week-banner">${date}</h3>
                 <tr>
-                    <th>Away Team</th>
+                    <th>Away</th>
                     <th>Score</th>
                     <th>Line</th>
                     <th>Score</th>
-                    <th>Home Team</th>
+                    <th>Home</th>
                     ${playerHeaders}
                 </tr>
             </thead>
@@ -147,13 +151,16 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
                 }
             }
             
+            const awayImg = game.away_team.toLowerCase().replace(/\s+/g, "-");
+            const homeImg = game.home_team.toLowerCase().replace(/\s+/g, "-");
+
             tableHTML += `
             <tr>
-                <td class="${awayWinner ? "winner" : ""}">${game.away_team}</td>
+                <td class="${awayWinner ? "winner" : ""}"><img class="team-logo" src="/images/${awayImg}.png"></td>
                 <td>${game.away_score ?? 0}</td>
                 <td>${spreadDisplay}</td>
                 <td>${game.home_score ?? 0}</td>
-                <td class="${homeWinner ? "winner" : ""}">${game.home_team}</td>
+                <td class="${homeWinner ? "winner" : ""}"><img class="team-logo" src="/images/${homeImg}.png"></td>
                 ${playerCells}
             </tr>
             `;
