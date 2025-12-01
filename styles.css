@@ -45,7 +45,12 @@ table td {
 }
 
 button {
+    display: flex;
+    font-size: 20px;
     width: 80px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
 }
 
 @media screen {
@@ -384,4 +389,21 @@ table tr:nth-child(even) {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Yes/No box */
+.yesno-box {
+    padding: 12px;
+    background: #f4f4f4;
+    border: 1px solid #bbb;
+    border-radius: 8px;
+    width: fit-content;
+    margin: 20px auto;
+    text-align: center;
+}
+
+.yesno-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
 }

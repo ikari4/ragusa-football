@@ -1,3 +1,10 @@
+// /api/is-week-in-db.js
+// take current NFL week and returns array of games matching that week
+// array is used in main js to determine if games exist in database
+// and to determine the start time of the first game
+// decided to pass array and do manipulation in frontend js so as to 
+// avoid UTC to Eastern Time conversion
+
 import { createClient } from "@libsql/client";
 
 export default async function handler(req, res) {
@@ -5,7 +12,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
     }
 
-    const { nflWeek } = req.body;
+    let { nflWeek } = req.body;
   
     const client = createClient ({
         url: process.env.TURSO_DATABASE_URL,
@@ -14,16 +21,20 @@ export default async function handler(req, res) {
 
     try {
         const result = await client.execute({
-            sql: "SELECT nfl_week FROM games WHERE nfl_week = ? LIMIT 1",
-            args: [nflWeek]
+        sql: `
+            SELECT 
+            dk_game_id,    
+            nfl_week,
+            game_date
+            FROM games 
+            WHERE nfl_week = ?
+        `,
+        args: [nflWeek]
         });
 
-        const match = result.rows[0];
-        if (!match) {
-        return res.status(200).json({ success: false });
-        }
+        const rows = result.rows;
 
-        return res.status(200).json({ success: true });
+        return res.status(200).json({ rows });
 
     } catch (err) {
         console.error(err);

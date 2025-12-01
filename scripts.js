@@ -311,6 +311,32 @@ function setupSubmitButton(playerId) {
     });
 }
 
+function askYesNo(questionText) {
+    return new Promise(resolve => {
+        const displayDiv = document.getElementById("displayDiv");
+        displayDiv.innerHTML = `
+            <div class="yesno-box">
+                <p>${questionText}</p>
+                <div class="yesno-buttons">
+                    <button id="yesBtn">Yes</button>
+                    <button id="noBtn">No</button>
+                </div>
+            </div>
+        `;
+
+        document.getElementById("yesBtn").addEventListener("click", () => {
+            displayDiv.innerHTML = "";
+            resolve(true);
+        });
+
+        document.getElementById("noBtn").addEventListener("click", () => {
+            displayDiv.innerHTML = "";
+            resolve(false);
+        });
+    });
+}
+
+
 // 
 // main script begins here
 // 
@@ -321,6 +347,7 @@ window.addEventListener("load", async() => {
     const loginModal = document.getElementById("loginModal");
     const spinner = document.getElementById("loadingMessage");
     const logoutBtn = document.getElementById("logoutBtn");
+    const display = document.getElementById("displayDiv");
 
     // show login screen if player not logged in
     if(!username) {
@@ -341,10 +368,16 @@ window.addEventListener("load", async() => {
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({ nflWeek })
     })
+
+    const match = await weekRes.json();
     
+    // isWeek - any current week games in database?
+    // firstStart - start time for first game of the week 
+    const isWeek = match.length > 0;
+    const firstStart = new Date(Math.min(...match.rows.map(row => new Date(row.game_date).getTime())));
+
     // if not, get the games
-    const isWeek = await weekRes.json();
-    if(!isWeek.success) {
+    if(isWeek) {
         const getRes = await fetch ("/api/get-and-store-this-week-games", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
@@ -355,7 +388,7 @@ window.addEventListener("load", async() => {
         console.log("requestsRemaining from games: ", getMsg.requestsRemaining);
         spinner.style.display = "none";
     }
-    
+
     // has player made all picks in nflWeek?
     spinner.style.display = "block";
     const picksRes = await fetch ("/api/get-games-left-to-pick", {
@@ -378,7 +411,15 @@ window.addEventListener("load", async() => {
 
     // show picks table if player & teammate have made picks...
     if(gamesToPick.length === 0 && teammateGamesToPick.length === 0) {
-        wantToUpdateScores = confirm("Click OK to update all games scores or Cancel to skip");
+        const today = new Date();
+        let wantToUpdateScores = false;
+        // ... but only update scores if the first game of the week has started and user wants to
+        if (today > firstStart) {
+            spinner.style.display = "none";
+            wantToUpdateScores = await askYesNo("Update all game scores?");
+            spinner.style.display = "block";  
+        }
+        
         const picksTableRes = await fetch ("/api/build-picks-table-html", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
@@ -409,7 +450,7 @@ window.addEventListener("load", async() => {
         setupSubmitButton(playerId);
     // or alert that teammate hasn't picked yet
     } else {
-        alert("Your teammate has yet to submit picks");
+        display.innerHTML = "Waiting for teammate to pick...";
     } 
 
     // show add season standings table

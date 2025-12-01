@@ -127,8 +127,6 @@ export async function POST(req) {
 
         // if the first game has started, udpate all scores from the api
         const timeNow = new Date();
-
-
         const hasGameStarted = timeNow > firstStart;
         let scoresData = weekGames;
         let requestsRemaining;
