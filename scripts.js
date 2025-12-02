@@ -394,7 +394,7 @@ window.addEventListener("load", async() => {
 
     // isWeek - any current week games in database?
     // firstStart - start time for first game of the week 
-    const isWeek = match.length > 0;
+    const isWeek = match.rows.length > 0;
     const firstStart = new Date(Math.min(...match.rows.map(row => new Date(row.game_date).getTime())));
 
     // if not, get the games
