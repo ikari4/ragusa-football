@@ -180,9 +180,11 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
 function buildSeasonStandingsHtml(standingsData) {
     // group wins per week per player
     const playerWinsByWeek = {}; // { week: { playerName: wins } }
+    const playerPicksByWeek = {};
     const allPlayers = new Set();
 
     standingsData.forEach(row => {
+        const game = row.dk_game_id;
         const week = row.nfl_week;
         const player = row.username;
         const pick = row.pick;
@@ -192,12 +194,15 @@ function buildSeasonStandingsHtml(standingsData) {
         allPlayers.add(player);
 
         if (!playerWinsByWeek[week]) playerWinsByWeek[week] = {};
+        if (!playerPicksByWeek[week]) playerPicksByWeek[week] = {};
 
         if (winner && pick === winner) {
-        playerWinsByWeek[week][player] = (playerWinsByWeek[week][player] || 0) + 1;
+            playerWinsByWeek[week][player] = (playerWinsByWeek[week][player] || 0) + 1;
         } else if (!playerWinsByWeek[week][player]) {
-        playerWinsByWeek[week][player] = 0;
+            playerWinsByWeek[week][player] = 0;
         }
+
+        playerPicksByWeek[week][player] = (playerPicksByWeek[week][player] || 0) +1;
     });
 
     const playerNames = Array.from(allPlayers);
@@ -227,12 +232,28 @@ function buildSeasonStandingsHtml(standingsData) {
         htmlStand += "</tr>";
     });
 
+    const totalPicks = Object.values(playerPicksByWeek).reduce((acc, weekData) => {
+        for (const [player, picks] of Object.entries(weekData)) {
+            acc[player] = (acc[player] || 0) + picks;
+        }
+        return acc;
+    }, {});
+
     // add totals row
-    htmlStand += "<tr><td></td>";
+    htmlStand += "<tr><td>&Sigma;</td>";
     playerNames.forEach(name => {
         htmlStand += `<td>${totalWins[name]}</td>`;
     });
     htmlStand += "</tr>";
+
+    // add percent row
+    htmlStand += "<tr><td>%</td>";
+    playerNames.forEach(name => {
+        const percent = (100 * totalWins[name] / totalPicks[name]).toFixed(1);
+        htmlStand += `<td>${percent}%</td>`;
+    });
+    htmlStand += "</tr>";
+
 
     htmlStand += "</tbody></table></div>";
     htmlStand += "<hr></hr>";

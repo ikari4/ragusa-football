@@ -45,6 +45,13 @@ table td {
 }
 
 button {
+    appearance: none;         /* Standard reset */
+    -webkit-appearance: none; /* iOS Safari reset */
+    border: none;             /* Remove default borders */
+    background: #ddd;         /* Add your own background */
+    border-radius: 6px;       /* iOS rounds buttons by default */
+    padding: 0;               /* Remove iOS padding */
+    cursor: pointer;
     display: flex;
     font-size: 20px;
     width: 80px;
@@ -246,7 +253,7 @@ table tr:nth-child(even) {
     width: 23%;
 }
 
-#seasonStandings tr:last-child {
+#seasonStandings tr:nth-last-child(-n+2) {
     background-color: rgba(28, 75, 143, 0.7);
     color: white;
 }
