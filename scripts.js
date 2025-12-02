@@ -391,14 +391,14 @@ window.addEventListener("load", async() => {
     })
 
     const match = await weekRes.json();
-    
+
     // isWeek - any current week games in database?
     // firstStart - start time for first game of the week 
     const isWeek = match.length > 0;
     const firstStart = new Date(Math.min(...match.rows.map(row => new Date(row.game_date).getTime())));
 
     // if not, get the games
-    if(isWeek) {
+    if(!isWeek) {
         const getRes = await fetch ("/api/get-and-store-this-week-games", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
