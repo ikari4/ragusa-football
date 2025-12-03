@@ -202,7 +202,10 @@ function buildSeasonStandingsHtml(standingsData) {
             playerWinsByWeek[week][player] = 0;
         }
 
-        playerPicksByWeek[week][player] = (playerPicksByWeek[week][player] || 0) +1;
+        if (winner) {
+            playerPicksByWeek[week][player] = (playerPicksByWeek[week][player] || 0) +1;
+        }
+        
     });
 
     const playerNames = Array.from(allPlayers);
