@@ -474,6 +474,7 @@ window.addEventListener("load", async() => {
         setupSubmitButton(playerId);
     // or alert that teammate hasn't picked yet
     } else {
+        spinner.style.display = "none";
         display.innerHTML = "Waiting for teammate to pick...";
     } 
 
