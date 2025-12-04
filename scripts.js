@@ -370,7 +370,7 @@ window.addEventListener("load", async() => {
     const teammate = localStorage.getItem("teammate");
     const loginModal = document.getElementById("loginModal");
     const spinner = document.getElementById("loadingMessage");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const logoutDiv = document.getElementById("logoutDiv");
     const display = document.getElementById("displayDiv");
 
     // show login screen if player not logged in
@@ -495,6 +495,20 @@ window.addEventListener("load", async() => {
             alert("Error loading standings: " + err.message);
         } 
 
+    // show logout button
+    createNewElement = document.createElement("button");
+    createNewElement.id = "logoutBtn";
+    createNewElement.textContent = "Logout";
+    logoutDiv.appendChild(createNewElement);
+
+    // on 'logout' button click
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.removeItem("username");
+        localStorage.removeItem("playerId");
+        localStorage.removeItem("teammate");
+        location.reload();
+        document.getElementById("loginModal").style.display = "block";
+    });
 });
 
 // on 'login' button click
@@ -521,12 +535,5 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
     location.reload();
 });
 
-// on 'logout' button click
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  localStorage.removeItem("username");
-  localStorage.removeItem("playerId");
-  localStorage.removeItem("teammate");
-  location.reload();
-  document.getElementById("loginModal").style.display = "block";
-});
+
 
