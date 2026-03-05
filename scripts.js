@@ -309,47 +309,92 @@ function buildSeasonStandingsHtml(standingsData, teamFlag) {
 
 function buildNflTeamTableHtml(data) {
 
+    if (!data || data.length === 0) {
+        return `
+        <table class="nfl-team-ats-table">
+            <thead>
+                <tr>
+                    <th>Team</th>
+                    <th>Overall</th>
+                    <th>Home</th>
+                    <th>Away</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="4" style="text-align:center;">No games played yet</td>
+                </tr>
+            </tbody>
+        </table>`;
+    }
+
     const teams = {};
+
+    function initTeam(team) {
+        if (!teams[team]) {
+            teams[team] = {
+                overall: { w: 0, l: 0, t: 0 },
+                home: { w: 0, l: 0, t: 0 },
+                away: { w: 0, l: 0, t: 0 }
+            };
+        }
+    }
 
     for (const game of data) {
 
         const { home_team, away_team, winning_team } = game;
 
-        // initialize teams
-        if (!teams[home_team]) {
-            teams[home_team] = {
-                overall: { w:0, l:0 },
-                home: { w:0, l:0 },
-                away: { w:0, l:0 }
-            };
+        if (!winning_team) continue;
+
+        initTeam(home_team);
+        initTeam(away_team);
+
+        // Handle ties
+        if (winning_team === "TIE") {
+            teams[home_team].overall.t++;
+            teams[away_team].overall.t++;
+
+            teams[home_team].home.t++;
+            teams[away_team].away.t++;
+            continue;
         }
 
-        if (!teams[away_team]) {
-            teams[away_team] = {
-                overall: { w:0, l:0 },
-                home: { w:0, l:0 },
-                away: { w:0, l:0 }
-            };
-        }
-
-        // HOME TEAM
+        // Home win
         if (winning_team === home_team) {
             teams[home_team].overall.w++;
             teams[home_team].home.w++;
+
             teams[away_team].overall.l++;
             teams[away_team].away.l++;
-        } else {
-            teams[home_team].overall.l++;
-            teams[home_team].home.l++;
-            teams[away_team].overall.w++;
-            teams[away_team].away.w++;
         }
 
+        // Away win
+        else if (winning_team === away_team) {
+            teams[away_team].overall.w++;
+            teams[away_team].away.w++;
+
+            teams[home_team].overall.l++;
+            teams[home_team].home.l++;
+        }
     }
 
-    // build HTML
-    let html = `
-    <h3 class='week-title'>Team Record ATS</h3>
+    function record(r) {
+        return `${r.w}-${r.l}-${r.t}`;
+    }
+
+    let rows = "";
+
+    for (const [team, rec] of Object.entries(teams).sort()) {
+        rows += `
+        <tr>
+            <td>${team}</td>
+            <td>${record(rec.overall)}</td>
+            <td>${record(rec.home)}</td>
+            <td>${record(rec.away)}</td>
+        </tr>`;
+    }
+
+    return `
     <table class="nfl-team-ats-table">
         <thead>
             <tr>
@@ -360,28 +405,9 @@ function buildNflTeamTableHtml(data) {
             </tr>
         </thead>
         <tbody>
-    `;
-
-    Object.entries(teams)
-        .sort((a,b) => a[0].localeCompare(b[0]))
-        .forEach(([team, rec]) => {
-
-            html += `
-            <tr>
-                <td>${team}</td>
-                <td>${rec.overall.w}-${rec.overall.l}</td>
-                <td>${rec.home.w}-${rec.home.l}</td>
-                <td>${rec.away.w}-${rec.away.l}</td>
-            </tr>
-            `;
-        });
-
-    html += `
+            ${rows}
         </tbody>
-    </table>
-    `;
-
-    return html;
+    </table>`;
 }
 
 function setupSubmitButton(playerId) {
