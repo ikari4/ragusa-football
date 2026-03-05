@@ -177,7 +177,7 @@ function buildWinsAndPicksHtml(latestScores, latestWins, allPlayers) {
     return htmlWP;
 }
 
-function buildSeasonStandingsHtml(standingsData) {
+function buildSeasonStandingsHtml(standingsData, teamFlag) {
     // group wins per week per player
     const playerWinsByWeek = {}; // { week: { playerName: wins } }
     const playerPicksByWeek = {};
@@ -261,49 +261,127 @@ function buildSeasonStandingsHtml(standingsData) {
     htmlStand += "</tbody></table></div>";
     htmlStand += "<hr></hr>";
 
-    // create team standings array
-    const teamWins = {};      // { team_name: totalWins }
-    const allTeams = new Set();
+    if(teamFlag) {
+        // create team standings array
+        const teamWins = {};      // { team_name: totalWins }
+        const allTeams = new Set();
 
-    standingsData.forEach(row => {
-        const team = row.team_name;
-        const pick = row.pick;
-        const winner = row.winning_team;
+        standingsData.forEach(row => {
+            const team = row.team_name;
+            const pick = row.pick;
+            const winner = row.winning_team;
 
-        if (!team) return;
-        allTeams.add(team);
+            if (!team) return;
+            allTeams.add(team);
 
-        if (!teamWins[team]) teamWins[team] = 0;
+            if (!teamWins[team]) teamWins[team] = 0;
 
-        if (winner && pick === winner) {
-            teamWins[team] += 1;
-        }
-    });
+            if (winner && pick === winner) {
+                teamWins[team] += 1;
+            }
+        });
 
-    const teamNames = Array.from(allTeams);
+        const teamNames = Array.from(allTeams);
 
-    // build team standings table
-    let htmlTeams = "<h3 class='week-title'>Team Standings</h3>";
-    htmlTeams += `<div class="table-container"><table id="teamStandings">`;
-    htmlTeams += "<thead><tr>";
+        // build team standings table
+        let htmlTeams = "<h3 class='week-title'>Team Standings</h3>";
+        htmlTeams += `<div class="table-container"><table id="teamStandings">`;
+        htmlTeams += "<thead><tr>";
 
-    teamNames.forEach(team => {
-        htmlTeams += `<th>${team}</th>`;
-    });
+        teamNames.forEach(team => {
+            htmlTeams += `<th>${team}</th>`;
+        });
 
-    htmlTeams += "</tr></thead><tbody><tr>";
+        htmlTeams += "</tr></thead><tbody><tr>";
 
-    teamNames.forEach(team => {
-        htmlTeams += `<td>${teamWins[team] || 0}</td>`;
-    });
+        teamNames.forEach(team => {
+            htmlTeams += `<td>${teamWins[team] || 0}</td>`;
+        });
 
-    htmlTeams += "</tr></tbody></table></div>";
-    htmlTeams += "<hr>";
+        htmlTeams += "</tr></tbody></table></div>";
+        htmlTeams += "<hr>";
 
-    // append new table
-    htmlStand += htmlTeams;
-
+        // append new table
+        htmlStand += htmlTeams;
+    }
     return htmlStand;
+}
+
+function buildNflTeamTableHtml(data) {
+
+    const teams = {};
+
+    for (const game of data) {
+
+        const { home_team, away_team, winning_team } = game;
+
+        // initialize teams
+        if (!teams[home_team]) {
+            teams[home_team] = {
+                overall: { w:0, l:0 },
+                home: { w:0, l:0 },
+                away: { w:0, l:0 }
+            };
+        }
+
+        if (!teams[away_team]) {
+            teams[away_team] = {
+                overall: { w:0, l:0 },
+                home: { w:0, l:0 },
+                away: { w:0, l:0 }
+            };
+        }
+
+        // HOME TEAM
+        if (winning_team === home_team) {
+            teams[home_team].overall.w++;
+            teams[home_team].home.w++;
+            teams[away_team].overall.l++;
+            teams[away_team].away.l++;
+        } else {
+            teams[home_team].overall.l++;
+            teams[home_team].home.l++;
+            teams[away_team].overall.w++;
+            teams[away_team].away.w++;
+        }
+
+    }
+
+    // build HTML
+    let html = `
+    <h3 class='week-title'>Team Record ATS</h3>
+    <table class="nfl-team-ats-table">
+        <thead>
+            <tr>
+                <th>Team</th>
+                <th>Overall</th>
+                <th>Home</th>
+                <th>Away</th>
+            </tr>
+        </thead>
+        <tbody>
+    `;
+
+    Object.entries(teams)
+        .sort((a,b) => a[0].localeCompare(b[0]))
+        .forEach(([team, rec]) => {
+
+            html += `
+            <tr>
+                <td>${team}</td>
+                <td>${rec.overall.w}-${rec.overall.l}</td>
+                <td>${rec.home.w}-${rec.home.l}</td>
+                <td>${rec.away.w}-${rec.away.l}</td>
+            </tr>
+            `;
+        });
+
+    html += `
+        </tbody>
+    </table>
+    `;
+
+    return html;
 }
 
 function setupSubmitButton(playerId) {
@@ -372,6 +450,7 @@ window.addEventListener("load", async() => {
     const spinner = document.getElementById("loadingMessage");
     const logoutDiv = document.getElementById("logoutDiv");
     const display = document.getElementById("displayDiv");
+    const teamFlag = true;
 
     // show login screen if player not logged in
     if(!username) {
@@ -383,102 +462,108 @@ window.addEventListener("load", async() => {
 
     // determine nflWeek
     const currentWeek = findNflWeek();
-    const nflWeek = currentWeek.week;
+    if (currentWeek.week) {
+        const nflWeek = currentWeek.week;
 
-    // does database contain games for nflWeek?
-    spinner.style.display = "block";
-    const weekRes = await fetch ("/api/is-week-in-db", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ nflWeek })
-    })
-
-    const match = await weekRes.json();
-
-    // isWeek - any current week games in database?
-    // firstStart - start time for first game of the week 
-    const isWeek = match.rows.length > 0;
-    const firstStart = new Date(Math.min(...match.rows.map(row => new Date(row.game_date).getTime())));
-
-    // if not, get the games
-    if(!isWeek) {
-        const getRes = await fetch ("/api/get-and-store-this-week-games", {
+        // does database contain games for nflWeek?
+        spinner.style.display = "block";
+        const weekRes = await fetch ("/api/is-week-in-db", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ currentWeek })
+            body: JSON.stringify({ nflWeek })
         })
-        const getMsg = await getRes.json();
-        alert(getMsg.message);
-        console.log("requestsRemaining from games: ", getMsg.requestsRemaining);
+
+        const match = await weekRes.json();
+
+        // isWeek - any current week games in database?
+        // firstStart - start time for first game of the week 
+        const isWeek = match.rows.length > 0;
+        const firstStart = new Date(Math.min(...match.rows.map(row => new Date(row.game_date).getTime())));
+
+        // if not, get the games
+        if(!isWeek) {
+            const getRes = await fetch ("/api/get-and-store-this-week-games", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ currentWeek })
+            })
+            const getMsg = await getRes.json();
+            alert(getMsg.message);
+            console.log("requestsRemaining from games: ", getMsg.requestsRemaining);
+            spinner.style.display = "none";
+        }
+
+        // has player made all picks in nflWeek?
+        spinner.style.display = "block";
+        const picksRes = await fetch ("/api/get-games-left-to-pick", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ playerId: playerId, currentWeek })
+        })
+        const gamesToPick = await picksRes.json();
+    
+        // has teammate made all picks in nflWeek?
+        if (teamFlag) {
+            const teammatePicksRes = await fetch ("/api/get-games-left-to-pick", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ playerId: teammate, currentWeek })
+            })
+            const teammateGamesToPick = await teammatePicksRes.json();
+        } else {
+            const teammateGamesToPick = [];
+        }
+
+        // get the div ready for screen display
+        const displayDiv = document.getElementById("displayDiv");
+
+        // show picks table if player & teammate have made picks...
+        if(gamesToPick.length === 0 && teammateGamesToPick.length === 0) {
+            const today = new Date();
+            let wantToUpdateScores = false;
+            // ... but only update scores if the first game of the week has started and user wants to
+            if (today > firstStart) {
+                spinner.style.display = "none";
+                wantToUpdateScores = await askYesNo("Update all game scores?");
+                spinner.style.display = "block";  
+            }
+            
+            const picksTableRes = await fetch ("/api/build-picks-table-html", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ 
+                    currentWeek,
+                    wantToUpdateScores
+                })
+        })
+        const picksTableData = await picksTableRes.json();
+        const latestScores = picksTableData.scoresData;
+        const latestWins = picksTableData.winsData;
+        const allPlayers = picksTableData.allPlayers;
+        const requestsRemaining = picksTableData.requestsRemaining;
+        console.log("requestsRemaining from scores: ", requestsRemaining);
+        const winsPicksTable = buildWinsAndPicksHtml(latestScores, latestWins, allPlayers);
+        const winsPicksHtmlWrap = document.createElement('div');
+        winsPicksHtmlWrap.innerHTML = winsPicksTable;
+        displayDiv.appendChild(winsPicksHtmlWrap);
         spinner.style.display = "none";
+        
+        // or show picks to make for player if there are some to pick...
+        } else if (gamesToPick.length > 0) {
+            const returnPTMH = buildPicksToMakeHtml(gamesToPick);
+            const PTMHtmlWrap = document.createElement('div');
+            PTMHtmlWrap.innerHTML = returnPTMH;
+            displayDiv.appendChild(PTMHtmlWrap);
+            spinner.style.display = "none";
+            setupSubmitButton(playerId);
+        // or alert that teammate hasn't picked yet
+        } else {
+            spinner.style.display = "none";
+            display.innerHTML = "Waiting for teammate to pick...";
+        } 
     }
 
-    // has player made all picks in nflWeek?
-    spinner.style.display = "block";
-    const picksRes = await fetch ("/api/get-games-left-to-pick", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ playerId: playerId, currentWeek })
-    })
-    const gamesToPick = await picksRes.json();
-   
-    // has teammate made all picks in nflWeek?
-    const teammatePicksRes = await fetch ("/api/get-games-left-to-pick", {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({ playerId: teammate, currentWeek })
-    })
-    const teammateGamesToPick = await teammatePicksRes.json();
-
-    // get the div ready for screen display
-    const displayDiv = document.getElementById("displayDiv");
-
-    // show picks table if player & teammate have made picks...
-    if(gamesToPick.length === 0 && teammateGamesToPick.length === 0) {
-        const today = new Date();
-        let wantToUpdateScores = false;
-        // ... but only update scores if the first game of the week has started and user wants to
-        if (today > firstStart) {
-            spinner.style.display = "none";
-            wantToUpdateScores = await askYesNo("Update all game scores?");
-            spinner.style.display = "block";  
-        }
-        
-        const picksTableRes = await fetch ("/api/build-picks-table-html", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({ 
-                currentWeek,
-                wantToUpdateScores
-            })
-    })
-    const picksTableData = await picksTableRes.json();
-    const latestScores = picksTableData.scoresData;
-    const latestWins = picksTableData.winsData;
-    const allPlayers = picksTableData.allPlayers;
-    const requestsRemaining = picksTableData.requestsRemaining;
-    console.log("requestsRemaining from scores: ", requestsRemaining);
-    const winsPicksTable = buildWinsAndPicksHtml(latestScores, latestWins, allPlayers);
-    const winsPicksHtmlWrap = document.createElement('div');
-    winsPicksHtmlWrap.innerHTML = winsPicksTable;
-    displayDiv.appendChild(winsPicksHtmlWrap);
-    spinner.style.display = "none";
-    
-    // or show picks to make for player if there are some to pick...
-    } else if (gamesToPick.length > 0) {
-        const returnPTMH = buildPicksToMakeHtml(gamesToPick);
-        const PTMHtmlWrap = document.createElement('div');
-        PTMHtmlWrap.innerHTML = returnPTMH;
-        displayDiv.appendChild(PTMHtmlWrap);
-        spinner.style.display = "none";
-        setupSubmitButton(playerId);
-    // or alert that teammate hasn't picked yet
-    } else {
-        spinner.style.display = "none";
-        display.innerHTML = "Waiting for teammate to pick...";
-    } 
-
-    // show add season standings table
+    // show season standings table
     try {
         const standingsRes = await fetch("/api/build-season-standings-html");
         const standingsData = await standingsRes.json();
@@ -486,14 +571,30 @@ window.addEventListener("load", async() => {
         if (!Array.isArray(standingsData)) {
             throw new Error("Invalid standings data");
         }
-        const seasonStandingsTable = buildSeasonStandingsHtml(standingsData);
+        const seasonStandingsTable = buildSeasonStandingsHtml(standingsData, teamFlag);
         const seasonStandingsHtmlWrap = document.createElement('div');
         seasonStandingsHtmlWrap.innerHTML = seasonStandingsTable;
-        displayDiv.appendChild(seasonStandingsHtmlWrap);
+        display.appendChild(seasonStandingsHtmlWrap);
         spinner.style.display = "none";
-        } catch (err) {
+    } catch (err) {
             alert("Error loading standings: " + err.message);
-        } 
+    } 
+
+    // show nfl team records ats
+    try {
+        const nflTeamAtsRes = await fetch("/api/build-nfl-team-ats-html");
+        const nflTeamAtsData = await nflTeamAtsRes.json();
+        if (!Array.isArray(nflTeamAtsData)) {
+            throw new Error("Invalid standings data");
+        }
+        const nflTeamTable = buildNflTeamTableHtml(nflTeamAtsData);
+        const nflTeamHtmlWrap = document.createElement('div');
+        nflTeamHtmlWrap.innerHTML = nflTeamTable;
+        display.appendChild(nflTeamHtmlWrap);
+        spinner.style.display = "none";
+    } catch (err) {
+        alert("Error loading standings: " + err.message);
+    } 
 
     // show logout button
     createNewElement = document.createElement("button");
