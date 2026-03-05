@@ -336,6 +336,22 @@ table tr:nth-child(even) {
     width: 20%;
 }
 
+@media screen and (orientation: landscape) {
+    .nfl-team-ats-table th, .nfl-team-ats-table td {
+        font-size: 14px;
+    }
+}
+
+@media screen and (orientation: portrait) {
+    .nfl-team-ats-table th {
+        font-size: 10px;
+        height: 14px;
+    }
+    .nfl-team-ats-table td {
+        font-size: 12px;
+    }
+}
+
 /* picks to make (inside displayDiv) */
 .picks-div {
     display: flex;

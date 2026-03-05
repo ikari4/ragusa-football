@@ -311,6 +311,7 @@ function buildNflTeamTableHtml(data) {
 
     if (!data || data.length === 0) {
         return `
+        <h3 class='week-title'>Records Against the Spread</h3>
         <table class="nfl-team-ats-table">
             <thead>
                 <tr>
@@ -395,6 +396,7 @@ function buildNflTeamTableHtml(data) {
     }
 
     return `
+    <h3 class='week-title'>Records Against the Spread</h3>
     <table class="nfl-team-ats-table">
         <thead>
             <tr>
