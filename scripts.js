@@ -311,7 +311,7 @@ function buildNflTeamTableHtml(data) {
 
     if (!data || data.length === 0) {
         return `
-        <h3 class='week-title'>Records Against the Spread</h3>
+        <h3 class='week-title'>Team Records Against the Spread</h3>
         <table class="nfl-team-ats-table">
             <thead>
                 <tr>
@@ -409,7 +409,75 @@ function buildNflTeamTableHtml(data) {
         <tbody>
             ${rows}
         </tbody>
-    </table>`;
+    </table>
+    <hr>`;
+}
+
+function picksPerTeamTableHtml(statsData) {
+
+    // Get unique players ordered by player_id
+    const players = [...new Map(
+        statsData.map(d => [d.player_id, { id: d.player_id, username: d.username }])
+    ).values()].sort((a, b) => a.id - b.id);
+
+    // Get unique NFL teams
+    const teams = [...new Set(
+        statsData.flatMap(d => [d.home_team, d.away_team])
+    )].sort();
+
+    // Build record structure
+    const records = {};
+
+    teams.forEach(team => {
+        records[team] = {};
+        players.forEach(p => {
+            records[team][p.id] = { w: 0, l: 0, t: 0 };
+        });
+    });
+
+    // Count wins/losses/ties
+    statsData.forEach(row => {
+        const team = row.pick;
+        const player = row.player_id;
+
+        if (!records[team]) return;
+
+        if (row.winning_team === team) {
+            records[team][player].w++;
+        } else if (row.winning_team === "Tie") {
+            records[team][player].t++;
+        } else {
+            records[team][player].l++;
+        }
+    });
+
+    // Build HTML
+    let html = `<h3 class='week-title'>Player's Record with Each Team ATS</h3>`;
+    html += `<table class="picks-per-team-table">`;
+
+    // Header
+    html += `<thead><tr><th>Team</th>`;
+    players.forEach(p => {
+        html += `<th>${p.username}</th>`;
+    });
+    html += `</tr></thead>`;
+
+    // Body
+    html += `<tbody>`;
+    teams.forEach(team => {
+        html += `<tr><td>${team}</td>`;
+
+        players.forEach(p => {
+            const r = records[team][p.id];
+            html += `<td>${r.w}-${r.l}-${r.t}</td>`;
+        });
+
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table><hr>`;
+
+    return html;
 }
 
 function setupSubmitButton(playerId) {
@@ -563,18 +631,18 @@ window.addEventListener("load", async() => {
                     currentWeek,
                     wantToUpdateScores
                 })
-        })
-        const picksTableData = await picksTableRes.json();
-        const latestScores = picksTableData.scoresData;
-        const latestWins = picksTableData.winsData;
-        const allPlayers = picksTableData.allPlayers;
-        const requestsRemaining = picksTableData.requestsRemaining;
-        console.log("requestsRemaining from scores: ", requestsRemaining);
-        const winsPicksTable = buildWinsAndPicksHtml(latestScores, latestWins, allPlayers);
-        const winsPicksHtmlWrap = document.createElement('div');
-        winsPicksHtmlWrap.innerHTML = winsPicksTable;
-        displayDiv.appendChild(winsPicksHtmlWrap);
-        spinner.style.display = "none";
+            })
+            const picksTableData = await picksTableRes.json();
+            const latestScores = picksTableData.scoresData;
+            const latestWins = picksTableData.winsData;
+            const allPlayers = picksTableData.allPlayers;
+            const requestsRemaining = picksTableData.requestsRemaining;
+            console.log("requestsRemaining from scores: ", requestsRemaining);
+            const winsPicksTable = buildWinsAndPicksHtml(latestScores, latestWins, allPlayers);
+            const winsPicksHtmlWrap = document.createElement('div');
+            winsPicksHtmlWrap.innerHTML = winsPicksTable;
+            displayDiv.appendChild(winsPicksHtmlWrap);
+            spinner.style.display = "none";
         
         // or show picks to make for player if there are some to pick...
         } else if (gamesToPick.length > 0) {
@@ -608,20 +676,36 @@ window.addEventListener("load", async() => {
             alert("Error loading standings: " + err.message);
     } 
 
-    // show nfl team records ats
+    // show stats
     try {
-        const nflTeamAtsRes = await fetch("/api/build-nfl-team-ats-html");
-        const nflTeamAtsData = await nflTeamAtsRes.json();
-        if (!Array.isArray(nflTeamAtsData)) {
-            throw new Error("Invalid standings data");
+        const statsRes = await fetch("/api/build-nfl-team-html");
+        const statsData = await statsRes.json();
+        if (!Array.isArray(statsData)) {
+            throw new Error("Invalid nfl teams data");
         }
-        const nflTeamTable = buildNflTeamTableHtml(nflTeamAtsData);
+        const nflTeamTable = buildNflTeamTableHtml(statsData);
         const nflTeamHtmlWrap = document.createElement('div');
         nflTeamHtmlWrap.innerHTML = nflTeamTable;
         display.appendChild(nflTeamHtmlWrap);
         spinner.style.display = "none";
     } catch (err) {
-        alert("Error loading standings: " + err.message);
+        alert("Error loading nfl teams: " + err.message);
+    } 
+
+
+    try {
+        const statsRes = await fetch("/api/build-stats-html");
+        const statsData = await statsRes.json();
+        if (!Array.isArray(statsData)) {
+            throw new Error("Invalid stats data");
+        }
+        const picksPerTeamTable = picksPerTeamTableHtml(statsData);
+        const picksPerTeamWrap = document.createElement('div');
+        picksPerTeamWrap.innerHTML = picksPerTeamTable;
+        display.appendChild(picksPerTeamWrap);
+        spinner.style.display = "none";
+    } catch (err) {
+        alert("Error loading stats: " + err.message);
     } 
 
     // show logout button

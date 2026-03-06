@@ -1,4 +1,4 @@
-// build-nfl-team-ats-html.js
+// build-nfl-team-html.js
 // return array with all completed games
 
 import { createClient } from "@libsql/client";
